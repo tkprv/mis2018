@@ -8,7 +8,7 @@
     <section class="section">
         <div class="container">
             {% include "messages.html" %}
-            <h1 class="title has-text-centered">รายละเอียดผลสำรวจวันประชุม</h1>
+            <h1 class="title has-text-centered">รายละเอียดการสำรวจวันประชุม</h1>
             <p class="subtitle is-5 has-text-grey has-text-centered">
                 หัวข้อ: <strong class="has-text-link">{{ poll.poll_name }}</strong>
             </p>
@@ -17,8 +17,8 @@
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <h1 class="title is-4 mt-2">
-                            <span class="icon has-text-info"><i class="far fa-calendar"></i></span>
-                            <span>เลือกวัน-เวลาที่สะดวก</span>
+                            <span class="icon has-text-link"><i class="fas fa-info-circle"></i></span>
+                            <span>รายละเอียด</span>
                         </h1>
                         <div class="columns mb-5">
                             <div class="column">
@@ -34,6 +34,11 @@
                                 </div>
                             </div>
                         </div>
+                        <hr>
+                        <h1 class="title is-5 mt-2">
+                            <span class="icon has-text-link"><i class="far fa-calendar"></i></span>
+                            <span>วัน-เวลาที่สะดวก</span>
+                        </h1>
                         {% for item in poll.poll_items %}
                             <div class="box">
                                 <input class="is-checkradio" id="{{ item.id }}" type="checkbox" name="check_vote" value="{{ item.id }}"
@@ -53,20 +58,17 @@
                             </div>
                         {% endfor %}
                         <hr>
-                        <div class="columns mb-1">
-                            <div class="column">
-                                <div class="field">
-                                    <label class="label">รายชื่อผู้เข้าร่วม</label>
-                                    <div class="control">
-                                        {% for p in poll.participants %}
-                                            <span class="tag is-info is-light is-size-6 mb-2">
-                                                {{ p.fullname }}
-                                            </span>
-                                            <br>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
+                        <h1 class="title is-5 mt-2">
+                            <span class="icon has-text-link"><i class="fas fa-users"></i></span>
+                            <span>รายชื่อผู้เข้าร่วม</span>
+                        </h1>
+                        <div class="field">
+                            {% for p in poll.participants %}
+                                <span class="tag is-light is-size-7 is-rounded mb-2">
+                                    {{ p.fullname }}
+                                </span>
+                                <br>
+                            {% endfor %}
                         </div>
                         <div class="field is-grouped is-grouped-centered">
                             <div class="control">
@@ -81,38 +83,42 @@
                     </form>
                 </div>
                 <div class="column is-5 box ml-5">
-                    <h1 class="title ">ผลสำรวจวัน-เวลาประชุม</h1>#}
+                    <div class="level">
+                        <div class="level-left">
+                            <div>
+                                <h1 class="title is-4 mt-2">
+                                    <span class="icon has-text-link"><i class="fas fa-poll-h"></i></span>
+                                    <span>ผลสำรวจวัน-เวลาประชุม</span>
+                                </h1>
+                                <h1 class="subtitle has-text-grey" style="margin-left:  1.7em">Voted {{ voted|length }}/{{ poll.participants|length }} persons</h1>
+                            </div>
+                        </div>
+                        <div class="level-right">
+                            <span class="tag is-link is-large"><strong class="has-text-white">{{ vote_percentage }} %</strong></span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="field">
+                        {% for item in poll.poll_items %}
+                            <span>
+                                {{ loop.index }}. {{ item.start|localdatetime }} - {{ item.end|localdatetime }}
+                            </span>
+                            <span style="float:right">จำนวนผู้สำรวจ {{ item.voters.count() }}</span>
+                            <progress class="progress is-success" value="{{ item.voters.count() }}"
+                                      max="{{ poll.participants|length }}">
+                            </progress>
+                        {% endfor %}
+                    </div>
+                    <article class="message is-warning mt-6">
+                        <div class="message-body">
+                            <strong>หมายเหตุ :</strong> ผลโหวตจะอัปเดตแบบเรียลไทม์เมื่อผู้เข้าร่วมดำเนินการโหวต
+                        </div>
+                    </article>
                 </div>
-{#                    <div class="column is-12 box">#}
-{#                        <div class="columns is-vcentered">#}
-{#                            <div class="column has-text-left">#}
-{#                                <h1 class="title">ผลสำรวจวัน-เวลาประชุม</h1>#}
-{#                            </div>#}
-{#                            <div class="column has-text-right">#}
-{#                                <h1 class="title">Voted {{ voted|length }}/{{ poll.participants|length }} persons</h1>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                        {% for item in poll.poll_items %}#}
-{#                            <span>#}
-{#                                {{ loop.index }}. {{ item.start|localdatetime }} - {{ item.end|localdatetime }}#}
-{#                            </span>#}
-{#                            <span style="float:right">จำนวนผู้สำรวจ {{ item.voters.count() }}</span>#}
-{#                            <progress class="progress is-success" value="{{ item.voters.count() }}"#}
-{#                                      max="{{ poll.participants|length }}">#}
-{#                            </progress>#}
-{#                        {% endfor %}#}
-{#                    </div>#}
             </div>
         </div>
     </section>
 {% endblock %}
 {% block scripts %}
     {{ super() }}
-    <script>
-        $(document).ready(function () {
-            document.body.addEventListener('htmx:configRequest', function (evt) {
-                evt.detail.headers['X-CSRF-Token'] = {{ csrf_token()|tojson|safe }};
-            });
-        })
-    </script>
 {% endblock %}
