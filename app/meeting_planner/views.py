@@ -896,14 +896,18 @@ def detail_poll_member(poll_id):
     tab = request.args.get('tab', 'new')
     poll = MeetingPoll.query.get(poll_id)
     date_time_now = arrow.now('Asia/Bangkok').datetime
-    statement = select(meeting_poll_participant_assoc).filter_by(staff_id=current_user.id, poll_id=poll_id)
-    poll_participant_id = db.session.execute(statement).first()[0]
-    voted = set()
-    for item in poll.poll_items:
-        for voter in item.voters:
-            voted.add(voter.participant)
-    return render_template('meeting_planner/meeting_detail_poll_member.html', poll=poll, tab=tab,
-                           voted=voted, date_time_now=date_time_now, poll_participant_id=poll_participant_id)
+    if date_time_now <= poll.start_vote:
+        statement = select(meeting_poll_participant_assoc).filter_by(staff_id=current_user.id, poll_id=poll_id)
+        poll_participant_id = db.session.execute(statement).first()[0]
+        voted = set()
+        for item in poll.poll_items:
+            for voter in item.voters:
+                voted.add(voter.participant)
+        return render_template('meeting_planner/meeting_detail_poll_member.html', poll=poll, tab=tab,
+                               voted=voted, date_time_now=date_time_now, poll_participant_id=poll_participant_id)
+    else:
+        return render_template('meeting_planner/notification_page.html', start_vote=poll.start_vote,
+                               close_vote=poll.close_vote)
 
 
 @meeting_planner.route('meeting/poll/notify/<int:poll_id>/<int:participant_id>')
