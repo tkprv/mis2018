@@ -22,7 +22,7 @@
                             <th>รายละเอียด</th>
                         </thead>
                         <tbody>
-                            {% for poll in polls %}
+                            {% for poll in polls|sort(attribute='start') %}
                                 <tr>
                                     <td>
                                         {{ poll.poll_name }}
@@ -57,7 +57,9 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
-            $('#poll').DataTable();
+            $('#poll').DataTable({
+                 order: [[1, 'asc']],
+            });
         });
     </script>
 {% endblock %}
