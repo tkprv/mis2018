@@ -674,23 +674,29 @@ def add_poll_item():
     form = MeetingPollForm()
     form.poll_items.append_entry()
     item_form = form.poll_items[-1]
+    index = len(form.poll_items)
     template = """
         <div id="{}">
-            <div class="field">
-                <label class="label">{}</label>
-                <div class="control">
-                    {}
+            <hr style="background-color: #F3F3F3">
+            <p><strong>รายการที่ {}</strong></p>
+            <div class="field-body">
+                <div class="field">
+                    <label class="label">{}</label>
+                    <div class="control">
+                        {}
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <label class="label">{}</label>
-                <div class="control">
-                    {}
+                <div class="field">
+                    <label class="label">{}</label>
+                    <div class="control">
+                        {}
+                    </div>
                 </div>
-            </div>
+            </div>    
         </div>
     """
     resp = template.format(item_form.id,
+                           index,
                            item_form.start.label,
                            item_form.start(class_='input'),
                            item_form.end.label,
@@ -708,24 +714,31 @@ def remove_poll_item():
     form = MeetingPollForm()
     form.poll_items.pop_entry()
     resp = ''
-    for item_form in form.poll_items:
+    for i, item_form in enumerate(form.poll_items, start=1):
+        hr = '<hr style="background-color: #F3F3F3">' if i > 1 else ''
         template = """
             <div id="{}">
-                <div class="field">
-                    <label class="label">{}</label>
-                    <div class="control">
-                        {}
+                {}
+                <p><strong>รายการที่ {}</strong></p>
+                <div class="field-body">
+                    <div class="field">
+                        <label class="label">{}</label>
+                        <div class="control">
+                            {}
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <label class="label">{}</label>
-                    <div class="control">
-                        {}
+                    <div class="field">
+                        <label class="label">{}</label>
+                        <div class="control">
+                            {}
+                        </div>
                     </div>
                 </div>
             </div>
         """
         resp += template.format(item_form.id,
+                                hr,
+                                i,
                                 item_form.start.label,
                                 item_form.start(class_='input'),
                                 item_form.end.label,
@@ -854,21 +867,27 @@ def add_vote(poll_id):
     poll = MeetingPoll.query.get(poll_id)
     statement = select(meeting_poll_participant_assoc).filter_by(staff_id=current_user.id, poll_id=poll_id)
     poll_participant_id = db.session.execute(statement).first()[0]
-    if request.method == 'POST':
-        form = request.form
-        for item in poll.poll_items:
-            poll_participant = item.voters.filter_by(poll_participant_id=poll_participant_id).first()
-            if str(item.id) in form.getlist('check_vote'):
-                if not poll_participant:
-                    item.voters.append(MeetingPollItemParticipant(poll_participant_id=poll_participant_id))
-            else:
-                if poll_participant:
-                    db.session.delete(poll_participant)
-            db.session.add(item)
-        db.session.commit()
-        return redirect(url_for('meeting_planner.list_poll_participant'))
-    return render_template('meeting_planner/meeting_add_vote.html', poll=poll, tab=tab,
-                           poll_participant_id=poll_participant_id)
+    date_time_now = arrow.now('Asia/Bangkok').datetime
+    start_vote = arrow.get(poll.start_vote, 'Asia/Bangkok').datetime
+    if date_time_now >= start_vote:
+        if request.method == 'POST':
+            form = request.form
+            for item in poll.poll_items:
+                poll_participant = item.voters.filter_by(poll_participant_id=poll_participant_id).first()
+                if str(item.id) in form.getlist('check_vote'):
+                    if not poll_participant:
+                        item.voters.append(MeetingPollItemParticipant(poll_participant_id=poll_participant_id))
+                else:
+                    if poll_participant:
+                        db.session.delete(poll_participant)
+                db.session.add(item)
+            db.session.commit()
+            return redirect(url_for('meeting_planner.list_poll_participant'))
+        return render_template('meeting_planner/meeting_add_vote.html', poll=poll, tab=tab,
+                               poll_participant_id=poll_participant_id)
+    else:
+        return render_template('meeting_planner/notification_page.html', start_vote=poll.start_vote,
+                               close_vote=poll.close_vote)
 
 
 @meeting_planner.route('/meetings/poll/show_vote/<int:poll_id>')
@@ -896,7 +915,8 @@ def detail_poll_member(poll_id):
     tab = request.args.get('tab', 'new')
     poll = MeetingPoll.query.get(poll_id)
     date_time_now = arrow.now('Asia/Bangkok').datetime
-    if date_time_now <= poll.start_vote:
+    start_vote = arrow.get(poll.start_vote, 'Asia/Bangkok').datetime
+    if date_time_now >= start_vote:
         statement = select(meeting_poll_participant_assoc).filter_by(staff_id=current_user.id, poll_id=poll_id)
         poll_participant_id = db.session.execute(statement).first()[0]
         voted = set()
