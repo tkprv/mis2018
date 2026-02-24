@@ -619,6 +619,7 @@ def edit_poll(poll_id=None):
         poll.start_vote = arrow.get(form.start_vote.data, 'Asia/Bangkok').datetime
         poll.close_vote = arrow.get(form.close_vote.data, 'Asia/Bangkok').datetime
         poll.user = current_user
+        poll.is_closed = False
         for group_id in request.form.getlist('groups'):
             group = StaffGroupDetail.query.get(group_id)
             for g in group.group_members:
@@ -1016,14 +1017,18 @@ def add_poll_item_form(poll_id):
     return render_template('meeting_planner/modal/add_poll_item_modal.html', poll_id=poll_id, form=form)
 
 
-@meeting_planner.route('/meeting/poll/close/<int:poll_id>', methods=['POST'])
+@meeting_planner.route('/meeting/poll/close/<int:poll_id>', methods=['POST', 'DELETE'])
 def close_poll(poll_id):
     poll = MeetingPoll.query.get(poll_id)
-    if not poll.is_closed:
+    if poll.is_closed == False:
         poll.is_closed = True
         flash('ปิดรายการเรียบร้อย', 'success')
     else:
         poll.is_closed = False
+        result = MeetingPollResult.query.filter_by(poll_id=poll_id).first()
+        if result:
+            db.session.delete(result)
+            db.session.commit()
         flash('เปิดรายการอีกครั้งเรียบร้อย', 'success')
     db.session.add(poll)
     db.session.commit()
