@@ -12,8 +12,8 @@
             <p class="subtitle is-5 has-text-grey has-text-centered">
                 หัวข้อ: <strong class="has-text-link">{{ poll.poll_name }}</strong>
             </p>
-            <div class="columns is-variable is-6">
-                <div class="column is-7 box">
+            <div class="columns is-variable is-6 is-align-items-stretch">
+                <div class="column is-7 box" style="height: 100%">
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <h1 class="title is-4 mt-2">
@@ -53,7 +53,9 @@
                                         <strong>{{ item.start|localdate }}</strong>
                                     {% endif %}
                                     <br>
-                                    {{ item.start|localtime }} - {{ item.end|localtime }}
+                                    <span style="margin-left: 1.9em">
+                                        {{ item.start|localtime }} - {{ item.end|localtime }}
+                                    </span>
                                 </label>
                             </div>
                         {% endfor %}
@@ -70,7 +72,7 @@
                                 <br>
                             {% endfor %}
                         </div>
-                        <div class="field is-grouped is-grouped-centered">
+                        <div class="field is-grouped is-grouped-centered mb-3">
                             <div class="control">
                                 <a href="{{ url_for('meeting_planner.list_poll_participant', tab=tab) }}" class="button">
                                     Cancel
@@ -82,7 +84,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="column is-5 box ml-5">
+                <div class="column is-5 box ml-5" style="height: 100%">
                     <div class="level">
                         <div class="level-left">
                             <div>
@@ -109,7 +111,7 @@
                             </progress>
                         {% endfor %}
                     </div>
-                    <article class="message is-warning mt-6">
+                    <article class="message is-warning mt-6 mb-3">
                         <div class="message-body">
                             <strong>หมายเหตุ :</strong> ผลโหวตจะอัปเดตแบบเรียลไทม์เมื่อผู้เข้าร่วมดำเนินการโหวต
                         </div>
