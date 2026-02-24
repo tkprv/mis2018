@@ -880,6 +880,17 @@ def add_vote(poll_id):
             vote_percentage = (vote_results / total_participants) * 100
         else:
             vote_percentage = 0
+
+        room_events = RoomEvent.query.join(RoomEvent.participants).filter(StaffAccount.id == current_user.id)
+        conflict_item_ids = []
+
+        for participant in poll.participants:
+            if participant.id == current_user.id:
+                for poll_item in poll.poll_items:
+                    for event in room_events:
+                        if poll_item.start < event.end and poll_item.end > event.start:
+                            conflict_item_ids.append(poll_item.id)
+
         if request.method == 'POST':
             form = request.form
             for item in poll.poll_items:
@@ -894,7 +905,8 @@ def add_vote(poll_id):
             db.session.commit()
             return redirect(url_for('meeting_planner.list_poll_participant'))
         return render_template('meeting_planner/meeting_add_vote.html', poll=poll, tab=tab, voted=voted,
-                               poll_participant_id=poll_participant_id, vote_percentage=vote_percentage)
+                               poll_participant_id=poll_participant_id, vote_percentage=vote_percentage,
+                               conflict_item_ids=conflict_item_ids)
     else:
         return render_template('meeting_planner/notification_page.html', start_vote=poll.start_vote,
                                close_vote=poll.close_vote)
