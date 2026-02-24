@@ -933,8 +933,15 @@ def detail_poll_member(poll_id):
         for item in poll.poll_items:
             for voter in item.voters:
                 voted.add(voter.participant)
+        vote_results = len(voted)
+        total_participants = len(poll.participants)
+        if vote_results:
+            vote_percentage = (vote_results / total_participants) * 100
+        else:
+            vote_percentage = 0
         return render_template('meeting_planner/meeting_detail_poll_member.html', poll=poll, tab=tab,
-                               voted=voted, date_time_now=date_time_now, poll_participant_id=poll_participant_id)
+                               voted=voted, date_time_now=date_time_now, poll_participant_id=poll_participant_id,
+                               vote_percentage=vote_percentage)
     else:
         return render_template('meeting_planner/notification_page.html', start_vote=poll.start_vote,
                                close_vote=poll.close_vote)
