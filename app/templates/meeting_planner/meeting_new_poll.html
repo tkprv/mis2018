@@ -25,16 +25,18 @@
                                 {{ form.poll_name(class='input is-danger') }}
                             </div>
                         </div>
-                        <div class="field">
-                            <label class="label">วัน-เวลาเริ่มสำรวจ</label>
-                            <div class="control">
-                                {{ form.start_vote(class="input") }}
+                        <div class="field-body mb-5">
+                            <div class="field">
+                                <label class="label">วัน-เวลาเริ่มสำรวจ</label>
+                                <div class="control">
+                                    {{ form.start_vote(class="input") }}
+                                </div>
                             </div>
-                        </div>
-                        <div class="field">
-                            <label class="label">วัน-เวลาปิดสำรวจ</label>
-                            <div class="control">
-                                {{ form.close_vote(class="input") }}
+                            <div class="field">
+                                <label class="label">วัน-เวลาปิดสำรวจ</label>
+                                <div class="control">
+                                    {{ form.close_vote(class="input") }}
+                                </div>
                             </div>
                         </div>
                         {% if poll_id %}
