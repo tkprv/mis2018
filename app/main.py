@@ -159,12 +159,12 @@ def user_lookup_callback(identity, payload):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('errors/404.html', error=e), 404
+    return render_template('errors/404.html', blueprint=request.blueprint, error=e), 404
 
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template('errors/500.html', error=e), 500
+    return render_template('errors/500.html', blueprint=request.blueprint, error=e), 500
 
 
 @app.errorhandler(PermissionDenied)
