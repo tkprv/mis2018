@@ -481,8 +481,6 @@
 
                 const applyInputMode = () => {
                     const isPercent = discountTypeSelect.value === 'เปอร์เซ็นต์';
-                    // Use text input to avoid browser number-input normalization issues (e.g. "1500." -> "1500"),
-                    // which breaks decimal typing and our cap checks.
                     discountInput.setAttribute('type', 'text');
                     discountInput.setAttribute('inputmode', isPercent ? 'numeric' : 'decimal');
                     discountInput.setAttribute('autocomplete', 'off');
