@@ -7499,7 +7499,7 @@ def generate_quotation_pdf(quotation, sign=False):
 def export_quotation_pdf(quotation_id):
     quotation = ServiceQuotation.query.get(quotation_id)
     if quotation.digital_signature:
-        return send_file(BytesIO(quotation.digital_signature), download_name='Quotation.pdf',
+        return send_file(BytesIO(quotation.digital_signature),download_name=f'Quotation {quotation.quotation_no}.pdf',
                          as_attachment=True)
     buffer = generate_quotation_pdf(quotation)
     return send_file(buffer, download_name=f'Quotation {quotation.quotation_no}.pdf', as_attachment=True)
