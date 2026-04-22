@@ -7806,7 +7806,10 @@ def view_invoice_for_finance(invoice_id):
         is_overdue = True
     if invoice.payments:
         for payment in invoice.payments:
-            slip_url = generate_url(payment.slip)
+            if payment.slip:
+                slip_url = generate_url(payment.slip)
+            else:
+                slip_url = None
     else:
         slip_url = None
     return render_template('service_admin/view_invoice_for_finance.html', invoice=invoice, slip_url=slip_url,
