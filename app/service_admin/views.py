@@ -4099,7 +4099,7 @@ def generate_bacteria_request_pdf(service_request):
 def export_bacteria_request_pdf(request_id):
     service_request = ServiceRequest.query.get(request_id)
     buffer = generate_bacteria_request_pdf(service_request)
-    return send_file(buffer, download_name='Request.pdf', as_attachment=True)
+    return send_file(buffer, download_name=f'Request {service_request.request_no}.pdf', as_attachment=True)
 
 
 def generate_virus_request_pdf(service_request):
@@ -4761,7 +4761,7 @@ def generate_virus_request_pdf(service_request):
 def export_virus_request_pdf(request_id):
     service_request = ServiceRequest.query.get(request_id)
     buffer = generate_virus_request_pdf(service_request)
-    return send_file(buffer, download_name='Request.pdf', as_attachment=True)
+    return send_file(buffer, download_name=f'Request {service_request.request_no}.pdf', as_attachment=True)
 
 
 @service_admin.route('/result/index')
@@ -5768,7 +5768,7 @@ def export_invoice_pdf(invoice_id):
         invoice.downloaded_at = arrow.now('Asia/Bangkok').datetime
         db.session.add(invoice)
         db.session.commit()
-    return send_file(buffer, download_name='Invoice.pdf', as_attachment=True)
+    return send_file(buffer, download_name=f'Invoice {invoice.invoice_no}.pdf', as_attachment=True)
 
 
 @service_admin.route('/payment/add', methods=['GET', 'POST'])
@@ -7502,7 +7502,7 @@ def export_quotation_pdf(quotation_id):
         return send_file(BytesIO(quotation.digital_signature), download_name='Quotation.pdf',
                          as_attachment=True)
     buffer = generate_quotation_pdf(quotation)
-    return send_file(buffer, download_name='Quotation.pdf', as_attachment=True)
+    return send_file(buffer, download_name=f'Quotation {quotation.quotation_no}.pdf', as_attachment=True)
 
 
 @service_admin.route('/procurement/meeting/add', methods=['GET'])
