@@ -432,7 +432,16 @@
             };
 
             const parseNumber = (value) => {
-                const cleaned = String(value || '').replace(/,/g, '');
+                const raw = String(value || '').trim().replace(/\s/g, '');
+                if (raw === '' || raw === '.') return NaN;
+                let cleaned = raw;
+                if (!cleaned.includes('.') && cleaned.includes(',')) {
+                    const lastComma = cleaned.lastIndexOf(',');
+                    cleaned = cleaned.slice(0, lastComma).replace(/,/g, '') + '.' + cleaned.slice(lastComma + 1);
+                } else {
+                    cleaned = cleaned.replace(/,/g, '');
+                }
+
                 if (cleaned === '' || cleaned === '.') return NaN;
                 return Number(cleaned);
             };
@@ -470,15 +479,36 @@
 
                 const capForRow = () => (discountTypeSelect.value === 'เปอร์เซ็นต์' ? 100 : getTotalPrice(row));
 
+                const applyInputMode = () => {
+                    const isPercent = discountTypeSelect.value === 'เปอร์เซ็นต์';
+                    // Use text input to avoid browser number-input normalization issues (e.g. "1500." -> "1500"),
+                    // which breaks decimal typing and our cap checks.
+                    discountInput.setAttribute('type', 'text');
+                    discountInput.setAttribute('inputmode', isPercent ? 'numeric' : 'decimal');
+                    discountInput.setAttribute('autocomplete', 'off');
+                    discountInput.setAttribute('pattern', isPercent ? '\\d*' : '[0-9]*[.,]?[0-9]*');
+                };
+
+                applyInputMode();
+
                 const wouldBeValid = (nextValue) => {
-                    const next = String(nextValue || '').replace(/,/g, '');
-                    if (next !== '' && /[^\d.]/.test(next)) return false;
+                    const next = String(nextValue || '').trim().replace(/\s/g, '');
 
-                    const dotCount = (next.match(/\./g) || []).length;
+                    let normalized = next;
+                    if (!normalized.includes('.') && normalized.includes(',')) {
+                        const lastComma = normalized.lastIndexOf(',');
+                        normalized = normalized.slice(0, lastComma).replace(/,/g, '') + '.' + normalized.slice(lastComma + 1);
+                    } else {
+                        normalized = normalized.replace(/,/g, '');
+                    }
+
+                    if (normalized !== '' && /[^\d.]/.test(normalized)) return false;
+
+                    const dotCount = (normalized.match(/\./g) || []).length;
                     if (dotCount > 1) return false;
-                    if (discountTypeSelect.value === 'เปอร์เซ็นต์' && next.includes('.')) return false;
+                    if (discountTypeSelect.value === 'เปอร์เซ็นต์' && normalized.includes('.')) return false;
 
-                    const n = parseNumber(next);
+                    const n = parseNumber(normalized);
                     if (!Number.isFinite(n)) return true; // allow empty / "." while typing
                     return n <= capForRow() + 1e-9;
                 };
@@ -501,16 +531,29 @@
                     const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'];
                     if (allowedKeys.includes(e.key)) return;
 
-                    if (e.key === '.' && discountTypeSelect.value === 'เปอร์เซ็นต์') {
-                        e.preventDefault();
-                        return;
-                    }
-                    if (!/^\d$/.test(e.key) && e.key !== '.') {
+                    const rawKey = e.code === 'NumpadDecimal' || e.key === 'Decimal' ? '.' : e.key;
+                    const keyChar = rawKey === ',' ? '.' : rawKey;
+
+                    if (discountTypeSelect.value === 'เปอร์เซ็นต์' && keyChar === '.') {
                         e.preventDefault();
                         return;
                     }
 
-                    const next = insertAtSelection(discountInput, e.key);
+                    if (!/^\d$/.test(keyChar) && keyChar !== '.') {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (keyChar !== e.key) {
+                        e.preventDefault();
+                        const next = insertAtSelection(discountInput, keyChar);
+                        if (!wouldBeValid(next)) return;
+                        discountInput.value = next;
+                        recalcRow(row, discountInput, discountTypeSelect);
+                        return;
+                    }
+
+                    const next = insertAtSelection(discountInput, keyChar);
                     if (!wouldBeValid(next)) e.preventDefault();
                 });
 
@@ -520,11 +563,18 @@
 
                     e.preventDefault();
 
-                    const cleaned = String(text).replace(/[\s,]/g, '');
+                    const cleaned = String(text).trim();
                     const next = insertAtSelection(discountInput, cleaned);
                     if (!wouldBeValid(next)) return;
 
-                    discountInput.value = next.replace(/,/g, '');
+                    let stored = String(next || '').trim().replace(/\s/g, '');
+                    if (!stored.includes('.') && stored.includes(',')) {
+                        const lastComma = stored.lastIndexOf(',');
+                        stored = stored.slice(0, lastComma).replace(/,/g, '') + '.' + stored.slice(lastComma + 1);
+                    } else {
+                        stored = stored.replace(/,/g, '');
+                    }
+                    discountInput.value = stored;
                     recalcRow(row, discountInput, discountTypeSelect);
                 });
 
@@ -545,6 +595,7 @@
 
                 discountTypeSelect.addEventListener('change', () => {
                     discountInput.value = '';
+                    applyInputMode();
                     recalcRow(row, discountInput, discountTypeSelect);
                 });
 
