@@ -156,6 +156,11 @@ class ComplaintRecord(db.Model):
     subtopic = db.relationship(ComplaintSubTopic, backref=db.backref('records', cascade='all, delete-orphan'))
     priority_id = db.Column('priority_id', db.ForeignKey('complaint_priorities.id'))
     priority = db.relationship(ComplaintPriority, backref=db.backref('records', cascade='all, delete-orphan'))
+    organization =db.Column('organization', db.String(), info={'label': 'หน่วยงานรับผิดชอบ', 'choices': [
+        ('', 'กรุณาเลือกหน่วยงานที่รับผิดชอบ'),
+        ('หน่วยซ่อมบำรุง', 'หน่วยซ่อมบำรุง '),
+        ('หน่วยข้อมูลและสารสนเทศ', 'หน่วยข้อมูลและสารสนเทศ')
+    ]})
     status_id = db.Column('status', db.ForeignKey('complaint_statuses.id'))
     status = db.relationship(ComplaintStatus, backref=db.backref('records', cascade='all, delete-orphan'))
     type_id = db.Column('type_id', db.ForeignKey('complaint_types.id'))
