@@ -342,6 +342,7 @@
     {{ super() }}
     <script>
         $(document).ready(function () {
+            $.fn.dataTable.moment('DD/MM/YYYY');
             $('#timelines').DataTable({
                 order: [
                     [4, 'asc'],

@@ -470,6 +470,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
         $(document).ready(function () {
+            $.fn.dataTable.moment('DD/MM/YYYY');
             $('#timeline').DataTable({
                 order: [
                     [4, 'asc'],
