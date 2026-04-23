@@ -94,6 +94,7 @@ class ComplaintPriority(db.Model):
     __tablename__ = 'complaint_priorities'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     priority = db.Column('priority', db.Integer, nullable=False)
+    priority_short = db.Column('priority_short ', db.String())
     priority_text = db.Column('priority_text', db.String(255), nullable=False)
     priority_detail = db.Column('priority_detail', db.String)
     color = db.Column('color', db.String())
