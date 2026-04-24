@@ -76,9 +76,9 @@
                                 <th style="width: 1.5em">ID</th>
                                 <th>รายละเอียด</th>
                                 <th>หัวข้อ</th>
-                                <th>Tag</th>
                                 <th>ประเภท</th>
 {#                                <th>ประเภทครุภัณฑ์</th>#}
+                                <th>Tag</th>
                                 <th>หน่วยงานที่รับผิดชอบ</th>
                                 <th>บทบาท</th>
                                 <th>วันที่สร้าง</th>
@@ -98,6 +98,7 @@
                                             <td>{{ record.id }}</td>
                                             <td>{{ record.desc }}</td>
                                             <td>{{ record.topic }}</td>
+                                            <td>{{ record.type or 'ไม่ระบุ' }}</td>
                                             <td>
                                                 {% if record.tags %}
                                                     {% for tag in record.tags %}
@@ -107,7 +108,6 @@
                                                     {% endfor %}
                                                 {% endif %}
                                             </td>
-                                            <td>{{ record.type or 'ไม่ระบุ' }}</td>
 {#                                            <td>#}
 {#                                                {% if record.procurements %}#}
 {#                                                    {% for procurement in record.procurements %}#}

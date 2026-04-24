@@ -17,8 +17,10 @@
                         <thead>
                             <th>วันที่แจ้ง</th>
                             <th>หัวข้อ</th>
+                            <th>Tag</th>
                             <th>ประเภท</th>
-                            <th>ประเภทครุภัณฑ์</th>
+                            <th>หน่วยงานที่รับผิดชอบ</th>
+{#                            <th>ประเภทครุภัณฑ์</th>#}
                             <th>ระดับความรุนแรง</th>
                             <th>รายละเอียด</th>
                             <th>สถานะ</th>
@@ -58,8 +60,10 @@
                         }
                     },
                     { data : 'topic' },
+                    { data : 'tag' },
                     { data : 'type' },
-                    { data : 'procurement' },
+                    { data : 'organization' },
+                    {#{ data : 'procurement' },#}
                     {
                         data : 'priority',
                         render: function (data) {
