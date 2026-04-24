@@ -48,7 +48,6 @@ def create_timeline_form(detail_id):
         task = TextAreaField('Task', validators=[DataRequired()])
         start = DateField('วันที่เริ่มต้น', validators=[DataRequired()])
         estimate = DateField('วันที่คาดว่าจะแล้วเสร็จ', validators=[DataRequired()])
-        phase = SelectField('Phase', choices=[('1', '1'), ('2', '2'), ('3', '3')],validators=[DataRequired()])
         status = SelectField('status', choices=[('รอดำเนินการ', 'รอดำเนินการ'), ('เสร็จสิ้น', 'เสร็จสิ้น'), ('ยกเลิกการพัฒนา', 'ยกเลิกการพัฒนา')],
                              validators=[DataRequired()])
         issue = QuerySelectField('ปํญหาที่พบ', query_factory=lambda: SoftwareIssues.query.filter_by(software_request_detail_id=detail_id).all(), allow_blank=True,
