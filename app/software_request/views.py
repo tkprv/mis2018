@@ -296,6 +296,7 @@ def update_request(detail_id):
 @software_request.route('/admin/request/timeline/edit/<int:timeline_id>', methods=['GET', 'POST'])
 def create_timeline(detail_id=None, timeline_id=None):
     tab = request.args.get('tab')
+    template = request.args.get('template')
     if detail_id:
         SoftwareRequestTimelineForm = create_timeline_form(detail_id=detail_id)
         form = SoftwareRequestTimelineForm()
@@ -330,7 +331,6 @@ def create_timeline(detail_id=None, timeline_id=None):
             message = f'''เรียน คุณ{timeline.request.created_by.fullname}\n\n'''
             message += f'''{timeline.request.approver.fullname} ได้ทำการเพิ่มความคืบหน้า (Timeline) ของคำร้องขอรับบริการพัฒนา \n\n'''
             message += f'''โดยมีรายละเอียดข้อมูลดังต่อไปนี้\n'''
-            message += f'''  – รอบการดำเนินการพัฒนา (Phase): {timeline.phase}\n'''
             message += f'''  – งานที่ต้องดำเนินการ (Task): {timeline.task}\n'''
             message += f'''  – สถานะการดำเนินงาน: {timeline.status}\n'''
             message += f'''  – วันที่เริ่มต้น: {timeline.start.strftime('%d/%m/%Y')}\n'''
@@ -345,7 +345,7 @@ def create_timeline(detail_id=None, timeline_id=None):
             send_mail([timeline.request.created_by.email + '@mahidol.ac.th'], title, message)
             flash('เพิ่มข้อมูลสำเร็จ', 'success')
             resp = make_response(render_template('software_request/timeline_template.html',tab=tab,
-                                                 timeline=timeline))
+                                                 timeline=timeline, template=template))
             resp.headers['HX-Trigger'] = 'closeTimeline'
         else:
             if status != timeline.status:
@@ -370,7 +370,7 @@ def create_timeline(detail_id=None, timeline_id=None):
         for er in form.errors:
             flash(er, 'danger')
     return render_template('software_request/modal/create_timeline_modal.html', form=form, tab=tab,
-                           detail_id=detail_id, timeline_id=timeline_id)
+                           detail_id=detail_id, timeline_id=timeline_id, template=template)
 
 
 @software_request.route('/admin/request/timeline/update/<int:timeline_id>', methods=['GET', 'POST'])
@@ -416,7 +416,6 @@ def delete_timeline(timeline_id):
     message = f'''เรียน คุณ{timeline.request.created_by.fullname}\n\n'''
     message += f'''{timeline.request.approver.fullname} ได้ทำการยกเลิกพัฒนาความคืบหน้า (Timeline) ของคำร้องขอรับบริการพัฒนา \n\n'''
     message += f'''โดยมีรายละเอียดข้อมูลดังต่อไปนี้\n'''
-    message += f'''  – รอบการดำเนินการพัฒนา (Phase): {timeline.phase}\n'''
     message += f'''  – งานที่ต้องดำเนินการ (Task): {timeline.task}\n'''
     message += f'''  – สถานะการดำเนินงาน: {timeline.status}\n'''
     message += f'''  – วันที่เริ่มต้น: {timeline.start.strftime('%d/%m/%Y')}\n'''
