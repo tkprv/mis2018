@@ -244,7 +244,6 @@
                                                     <th>Task</th>
                                                     <th>Issue</th>
                                                     <th>สถานะ</th>
-                                                    <th>Phase</th>
                                                     <th>วันที่เริ่มต้น</th>
                                                     <th>วันที่คาดว่าจะแล้วเสร็จ</th>
                                                     <th>ผู้รับผิดชอบ</th>
@@ -259,7 +258,6 @@
                                                                     {{ timeline.status }}
                                                                 </span>
                                                             </td>
-                                                            <td>{{ timeline.phase }}</td>
                                                             <td>{{ timeline.start.strftime('%d/%m/%Y') }}</td>
                                                             <td>{{ timeline.estimate.strftime('%d/%m/%Y') }}</td>
                                                             <td>{{ timeline.admin.fullname }}</td>
