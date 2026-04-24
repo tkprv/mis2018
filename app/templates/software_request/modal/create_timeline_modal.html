@@ -18,9 +18,10 @@
                     {% else %}
                         hx-post="{{ url_for('software_request.create_timeline', detail_id=detail_id, tab=tab) }}"
                     {% endif %}
-                        hx-indicator="#submit-form"
+                    {% if template != 'detail' %}
                         hx-target="#timelines"
                         hx-swap="beforeend"
+                    {% endif %}
             >
                 <input type="hidden" value="{{ csrf_token() }}" name="csrf_token">
                 <div class="field">

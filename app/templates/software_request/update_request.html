@@ -287,7 +287,7 @@
                                                                            hx-swap="innerHTML"
                                                                            hx-target="#timeline_form"
                                                                            hx-get="{{ url_for('software_request.create_timeline',
-                                                                                      timeline_id=timeline.id, tab=tab) }}"
+                                                                           timeline_id=timeline.id, tab=tab, template='update') }}"
                                                                         >
                                                                             <span class="icon">
                                                                                 <i class="fas fa-pencil-alt"></i>
@@ -315,7 +315,8 @@
                                                 <a class="button is-link is-rounded"
                                                    hx-swap="innerHTML"
                                                    hx-target="#timeline_form"
-                                                   hx-get="{{ url_for('software_request.create_timeline', detail_id=detail.id, tab=tab) }}">
+                                                   hx-get="{{ url_for('software_request.create_timeline',
+                                                   detail_id=detail.id, tab=tab, template='update') }}">
                                                     <span class="icon">
                                                         <i class="fas fa-plus"></i>
                                                     </span>

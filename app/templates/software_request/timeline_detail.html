@@ -2,6 +2,8 @@
 {% block title %}Timeline Detail{% endblock %}
 {% block head %}
     {{ super() }}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
     <style>
         .custom-card {
             border-radius: 12px;
@@ -105,6 +107,7 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="timeline_form"></div>
                         <footer class="card-footer">
                             <a href="{{ url_for('software_request.admin_index', tab=tab) }}" class="card-footer-item">
                                 <span class="icon">
@@ -112,7 +115,10 @@
                                 </span>
                                 <span>กลับ</span>
                             </a>
-                            <a href="{{ url_for('software_request.update_request', detail_id=timeline.request_id, tab=tab) }}"
+                            <a hx-swap="innerHTML"
+                               hx-target="#timeline_form"
+                               hx-get="{{ url_for('software_request.create_timeline', timeline_id=timeline.id, tab=tab,
+                               template='detail') }}"
                                class="card-footer-item has-text-warning">
                                 <span class="icon">
                                     <i class="fas fa-pencil-alt"></i>
@@ -136,4 +142,14 @@
             </div>
         </div>
     </section>
+{% endblock %}
+{% block scripts %}
+    {{ super() }}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script>
+        window.document.addEventListener("closeTimeline", function () {
+            htmx.removeClass(htmx.find('#timeline-modal'), "is-active")
+        })
+    </script>
 {% endblock %}
