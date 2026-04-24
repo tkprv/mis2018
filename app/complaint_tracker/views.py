@@ -784,7 +784,7 @@ def get_records():
         if item.tags:
             for tag in item.tags:
                 tag_html = f'''
-                        <span class ="tag is-rounded is-info mb-1" >
+                        <span class ="tag is-rounded is-info is-light mb-1" >
                             {tag.tag}
                         </span><br>'''
                 tags.append(tag_html)
