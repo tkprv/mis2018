@@ -37,6 +37,15 @@ class SoftwareRequestNumberID(db.Model):
         return u'{}'.format(self.count + 1)
 
 
+class SoftwareRequestPhase(db.Model):
+    __tablename__ = 'software_request_phases'
+    id = db.Column('id', db.Integer, autoincrement=True, primary_key=True)
+    phase = db.Column('phase', db.String(), nullable=False)
+
+    def __str__(self):
+        return f'{self.phase}'
+
+
 class SoftwareRequestSystem(db.Model):
     __tablename__ = 'software_request_systems'
     id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
