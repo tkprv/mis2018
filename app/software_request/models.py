@@ -212,6 +212,7 @@ class SoftwareRequestTestResult(db.Model):
     __tablename__ = 'software_request_test_results'
     id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
     detail = db.Column('detail', db.Text(), nullable=False, info={'label': 'รายละเอียด'})
+    status = db.Column('status', db.String())
     created_at = db.Column('created_at', db.DateTime(timezone=True))
     updated_at = db.Column('updated_at', db.DateTime(timezone=True))
     creator_id = db.Column('creator_id', db.ForeignKey('staff_account.id'))
