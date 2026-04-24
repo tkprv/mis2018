@@ -167,7 +167,10 @@ class SoftwareIssues(db.Model):
         'label': 'ประเภท',
         'choices': [(c,c) for c in ('Bug', 'Request', 'Enhancement')],
     })
-    issue = db.Column('issue', db.Text(), nullable=False, info={'label': 'Issue'})
+    issue = db.Column('issue', db.Text(), nullable=False, info={'label': 'Issue/Request'})
+    phase = db.Column('phase', db.String(), info={'label': 'Phase'})
+    start = db.Column('start', db.Date(), info={'label': 'วันที่เริ่มต้น'})
+    end = db.Column('end', db.Date(), info={'label': 'วันที่สิ้นสุด'})
     created_by = db.Column('created_by', db.ForeignKey('staff_account.id'))
     creator = db.relationship(StaffAccount, foreign_keys=[created_by])
     created_at = db.Column('created_at', db.DateTime(timezone=True))
