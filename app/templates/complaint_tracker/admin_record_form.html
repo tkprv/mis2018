@@ -288,7 +288,7 @@
                                         </div>
                                     </div>
                                     <div class="field">
-                                        <label class="label">tags</label>
+                                        <label class="label">Tag</label>
                                         <div class="control">
                                             {% if record.is_editable %}
                                                 {{ form.tags(class='js-example-basic-multiple', multiple='multiple') }}
@@ -307,6 +307,14 @@
                                             {% endif %}
                                         </div>
                                     </div>
+                                    {% if record.topic.category.no == 1 %}
+                                        <div class="field">
+                                            <label class="label">{{ form.organization.label }}</label>
+                                            <div class="select">
+                                                {{ form.organization(required=true) }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                     <div class="field">
                                         <label class="label">ระดับความรุนแรง</label>
                                         {% if record.is_editable %}
