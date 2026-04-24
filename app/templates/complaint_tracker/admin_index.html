@@ -102,9 +102,10 @@
                                             <td>
                                                 {% if record.tags %}
                                                     {% for tag in record.tags %}
-                                                        <span class="tag is-normal is-rounded is-info">
+                                                        <span class="tag is-rounded is-info mb-1" >
                                                             {{ tag }}
                                                         </span>
+                                                        <br>
                                                     {% endfor %}
                                                 {% endif %}
                                             </td>
