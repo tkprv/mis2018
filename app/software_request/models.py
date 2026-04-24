@@ -177,7 +177,6 @@ class SoftwareIssues(db.Model):
         'choices': [(c,c) for c in ('Bug', 'Request', 'Enhancement')],
     })
     issue = db.Column('issue', db.Text(), nullable=False, info={'label': 'Issue/Request'})
-    phase = db.Column('phase', db.String(), info={'label': 'Phase'})
     start = db.Column('start', db.Date(), info={'label': 'วันที่เริ่มต้น'})
     end = db.Column('end', db.Date(), info={'label': 'วันที่สิ้นสุด'})
     created_by = db.Column('created_by', db.ForeignKey('staff_account.id'))
