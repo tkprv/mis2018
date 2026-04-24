@@ -245,7 +245,7 @@ class ComplaintRecord(db.Model):
             'created_at': self.created_at.astimezone(localtz).isoformat(),
             'topic': self.topic.topic,
             'type': self.type.type if self.type else 'ไม่ระบุ',
-            'priority': self.priority.priority_text if self.priority else None,
+            'priority': self.priority.priority_short if self.priority else None,
             'desc': self.desc,
             'organization': self.organization if self.organization else None,
             'status': self.status.status if self.status else None,
