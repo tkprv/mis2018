@@ -52,6 +52,7 @@ class SoftwareRequestDetail(db.Model):
     title = db.Column('title', db.String(), info={'label': 'หัวข้อคำขอ'})
     description = db.Column('description', db.Text(), info={'label': 'รายละเอียดคำขอ'})
     status = db.Column('status', db.String())
+    note = db.Column('note', db.Text())
     type = db.Column('type', db.String(), info={'label': 'ประเภทคำขอ',
                                                 'choices': [('', 'กรุณาเลือกประเภทคำขอ'),
                                                             ('พัฒนาโปรแกรมใหม่', 'พัฒนาโปรแกรมใหม่'),
