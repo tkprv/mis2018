@@ -219,7 +219,6 @@ class SoftwareIssues(db.Model):
 class SoftwareRequestTestResult(db.Model):
     __tablename__ = 'software_request_test_results'
     id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
-    detail = db.Column('detail', db.Text(), nullable=False, info={'label': 'รายละเอียด'})
     status = db.Column('status', db.String())
     note = db.Column('note', db.Text())
     created_at = db.Column('created_at', db.DateTime(timezone=True))
