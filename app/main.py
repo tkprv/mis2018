@@ -1521,7 +1521,10 @@ def local_datetime(dt):
     bangkok = timezone('Asia/Bangkok')
     datetime_format = '%d/%m/%Y'
     try:
-        dt = dt.astimezone(bangkok).strftime(datetime_format)
+        if isinstance(dt, datetime):
+            dt = dt.astimezone(bangkok).strftime(datetime_format)
+        elif isinstance(dt, date):
+            dt = dt.strftime(datetime_format)
     except AttributeError:
         return None
     return dt
