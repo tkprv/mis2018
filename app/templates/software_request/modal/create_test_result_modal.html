@@ -24,16 +24,16 @@
                 <input type="hidden" value="{{ csrf_token() }}" name="csrf_token">
                     <div class="field">
                         <label class="label">
-                            {{ form.detail.label }}
+                            Requirement
                             <span class="has-text-danger">*</span>
                         </label>
                     </div>
                     <div class="field">
                         <div class="control">
-                            {{ form.detail(class='textarea') }}
+                            {{ form.issue(class='js-example-basic-single') }}
                         </div>
                     </div>
-                    <div class="field ">
+                    <div class="field mt-2">
                         <div class="control">
                             <input type="submit" id="submit-form" class="button is-success" value="บันทึก">
                         </div>
@@ -47,4 +47,9 @@
         htmx.addClass(htmx.find('#test-result-modal'), 'animate__fadeOut')
         htmx.removeClass(htmx.find('#test-result-modal'), "is-active", 500)
     })
+    $(document).ready(() => {
+        $('.js-example-basic-single').select2({
+            width: '100%',
+        });
+    });
 </script>
