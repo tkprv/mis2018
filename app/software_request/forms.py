@@ -56,6 +56,28 @@ def create_timeline_form(detail_id):
     return SoftwareRequestTimelineForm
 
 
+class QuerySelectFieldAppendable(QuerySelectField):
+    def __init__(self, label, validators=None, **kwargs):
+        super(QuerySelectFieldAppendable, self).__init__(label, validators, **kwargs)
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            if self.allow_blank and valuelist[0] == '__None':
+                self.data = None
+            else:
+                self._data = None
+                value = valuelist[0]
+                if value.isdigit():
+                    phase = SoftwareRequestPhase.query.filter_by(phase=value).first()
+                    if not phase:
+                        phase = SoftwareRequestPhase(phase=value)
+                        db.session.add(phase)
+                        db.session.commit()
+                    self._formdata = str(phase.id)
+                else:
+                    self._formdata = value
+
+
 class SoftwareRequestIssueForm(ModelForm):
     class Meta:
         model = SoftwareIssues
@@ -64,6 +86,10 @@ class SoftwareRequestIssueForm(ModelForm):
     status_ = SelectField('Status',
                           default='Draft',
                           choices=[(c,c) for c in ('Draft', 'Working', 'Cancelled', 'Closed')])
+    phase = QuerySelectFieldAppendable('Phase', query_factory=lambda: SoftwareRequestPhase.query.all(),
+                                       allow_blank=True,
+                                       blank_text='กรุณาเลือ Phase',
+                                       get_label='phase')
     staff = QuerySelectField('ผู้รับผิดชอบ', query_factory=lambda: StaffAccount.get_it_unit(), get_label='fullname')
 
 
