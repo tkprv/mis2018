@@ -221,6 +221,8 @@ class SoftwareRequestTestResult(db.Model):
     id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
     status = db.Column('status', db.String())
     note = db.Column('note', db.Text())
+    issue_id = db.Column('issue_id', db.ForeignKey('software_issues.id'))
+    issue = db.relationship(SoftwareIssues, backref=db.backref('test_results'))
     created_at = db.Column('created_at', db.DateTime(timezone=True))
     updated_at = db.Column('updated_at', db.DateTime(timezone=True))
     creator_id = db.Column('creator_id', db.ForeignKey('staff_account.id'))
