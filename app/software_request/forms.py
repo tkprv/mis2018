@@ -76,15 +76,18 @@ class QuerySelectFieldAppendable(QuerySelectField):
             else:
                 self._data = None
                 value = valuelist[0]
+
                 if value.isdigit():
-                    phase = SoftwareRequestPhase.query.filter_by(phase=value).first()
-                    if not phase:
-                        phase = SoftwareRequestPhase(phase=value)
-                        db.session.add(phase)
-                        db.session.commit()
-                    self._formdata = str(phase.id)
-                else:
-                    self._formdata = value
+                    phase = SoftwareRequestPhase.query.get(int(value))
+                    if phase:
+                        self._formdata = value
+                    else:
+                        phase = SoftwareRequestPhase.query.filter_by(phase=value).first()
+                        if not phase:
+                            phase = SoftwareRequestPhase(phase=value)
+                            db.session.add(phase)
+                            db.session.commit()
+                        self._formdata = str(phase.id)
 
 
 class SoftwareRequestIssueForm(ModelForm):
