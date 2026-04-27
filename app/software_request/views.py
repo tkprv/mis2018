@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 from app.roles import it_permission
 from app.software_request import software_request
 from app.software_request.forms import create_request_form, create_timeline_form, SoftwareRequestIssueForm, \
-    SoftwareRequestTestResultForm
+    create_test_result_form
 from app.software_request.models import *
 from werkzeug.utils import secure_filename
 from pydrive.auth import ServiceAccountCredentials, GoogleAuth
@@ -346,7 +346,7 @@ def create_timeline(detail_id=None, timeline_id=None):
             flash('เพิ่มข้อมูลสำเร็จ', 'success')
             resp = make_response(render_template('software_request/timeline_template.html',tab=tab,
                                                  timeline=timeline, template=template))
-            resp.headers['HX-Trigger'] = 'closeTimeline'
+            resp.headers['HX-Trigger'] = 'closeTimelineModal '
         else:
             if status != timeline.status:
                 scheme = 'http' if current_app.debug else 'https'
@@ -501,9 +501,11 @@ def create_issue(detail_id=None, issue_id=None):
 @software_request.route('/request/test_result/edit/<int:test_result_id>', methods=['GET', 'POST'])
 def create_test_result(detail_id=None, test_result_id=None):
     if detail_id:
+        SoftwareRequestTestResultForm = create_test_result_form(detail_id=detail_id)
         form = SoftwareRequestTestResultForm()
     else:
         test_result = SoftwareRequestTestResult.query.get(test_result_id)
+        SoftwareRequestTestResultForm = create_test_result_form(detail_id=test_result.request_id)
         form = SoftwareRequestTestResultForm(obj=test_result)
     if form.validate_on_submit():
         if detail_id:
@@ -518,31 +520,13 @@ def create_test_result(detail_id=None, test_result_id=None):
             test_result.updater_id = current_user.id
         db.session.add(test_result)
         db.session.commit()
-        scheme = 'http' if current_app.debug else 'https'
-        link = url_for("software_request.update_request", detail_id=test_result.request_id, _external=True,
-                       _scheme=scheme)
         if detail_id:
             flash('บันทึกข้อมูลผลการทดสอบสำเร็จ', 'success')
-            if test_result.request.staffs:
-                title = f'''แจ้งผลการทดสอบระบบ{test_result.request.title}'''
-                message = f'''ทดสอบระบบ{test_result.request.title}เสร็จเรียบร้อยแล้ว โดยมีรายละเอียดดังนี้ {test_result.detail}\n'''
-                message += f'''ท่านสามารถดูรายละเอียดเพิ่มเติมได้ที่ลิงก์ด้านล่าง\n'''
-                message += f'''{link}\n\n'''
-                message += f'''ระบบขอรับบริการพัฒนา Software\n'''
-                message += f'''คณะเทคนิคการแพทย์'''
-                send_mail([staff.email + '@mahidol.ac.th' for staff in test_result.request.staffs], title, message)
-            resp = make_response(render_template('software_request/test_result_template.html', test_result=test_result))
-            resp.headers['HX-Trigger'] = 'closeModal'
+            resp = make_response(render_template('software_request/test_result_template.html',
+                                                 test_result=test_result))
+            resp.headers['HX-Trigger'] = 'closeTestResultModal'
         else:
             flash('อัพเดตข้อมูลผลการทดสอบสำเร็จ', 'success')
-            if test_result.request.staffs:
-                title = f'''แจ้งแก้ไขผลการทดสอบระบบ{test_result.request.title}'''
-                message = f'''มีการแก้ไขผลการทดสอบระบบ{test_result.request.title} โดยมีรายละเอียดดังนี้ {test_result.detail}\n'''
-                message += f'''ท่านสามารถดูรายละเอียดเพิ่มเติมได้ที่ลิงก์ด้านล่าง\n'''
-                message += f'''{link}\n\n'''
-                message += f'''ระบบขอรับบริการพัฒนา Software\n'''
-                message += f'''คณะเทคนิคการแพทย์'''
-                send_mail([staff.email + '@mahidol.ac.th' for staff in test_result.request.staffs], title, message)
             resp = make_response()
             resp.headers['HX-Refresh'] = 'true'
         return resp
