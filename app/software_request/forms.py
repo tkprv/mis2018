@@ -60,7 +60,16 @@ class QuerySelectFieldAppendable(QuerySelectField):
     def __init__(self, label, validators=None, **kwargs):
         super(QuerySelectFieldAppendable, self).__init__(label, validators, **kwargs)
 
+    def iter_choices(self):
+        for value, label, selected in super().iter_choices():
+            if value == '__None':
+                yield '', label, selected
+            else:
+                yield value, label, selected
+
     def process_formdata(self, valuelist):
+        if valuelist and valuelist[0] == '':
+            valuelist = ['__None']
         if valuelist:
             if self.allow_blank and valuelist[0] == '__None':
                 self.data = None
@@ -81,7 +90,7 @@ class QuerySelectFieldAppendable(QuerySelectField):
 class SoftwareRequestIssueForm(ModelForm):
     class Meta:
         model = SoftwareIssues
-        only = ['issue', 'label']
+        only = ['issue', 'label', 'start', 'end']
 
     status_ = SelectField('Status',
                           default='Draft',
@@ -89,7 +98,8 @@ class SoftwareRequestIssueForm(ModelForm):
     phase = QuerySelectFieldAppendable('Phase', query_factory=lambda: SoftwareRequestPhase.query.all(),
                                        allow_blank=True,
                                        blank_text='กรุณาเลือ Phase',
-                                       get_label='phase')
+                                       get_label='phase',
+                                       render_kw={'required': True})
     staff = QuerySelectField('ผู้รับผิดชอบ', query_factory=lambda: StaffAccount.get_it_unit(), get_label='fullname')
 
 
