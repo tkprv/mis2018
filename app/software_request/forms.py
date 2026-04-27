@@ -100,12 +100,36 @@ class SoftwareRequestIssueForm(ModelForm):
                           choices=[(c,c) for c in ('Draft', 'Working', 'Cancelled', 'Closed')])
     phase = QuerySelectFieldAppendable('Phase', query_factory=lambda: SoftwareRequestPhase.query.all(),
                                        allow_blank=True,
-                                       blank_text='กรุณาเลือ Phase',
+                                       blank_text='กรุณาเลือก Phase',
                                        get_label='phase',
                                        render_kw={'required': True})
     staff = QuerySelectField('ผู้รับผิดชอบ', query_factory=lambda: StaffAccount.get_it_unit(), get_label='fullname')
 
 
-class SoftwareRequestTestResultForm(ModelForm):
-    class Meta:
-        model = SoftwareRequestTestResult
+class QuerySelectFieldRequired(QuerySelectField):
+    def iter_choices(self):
+        for value, label, selected in super().iter_choices():
+            if value == '__None':
+                yield '', label, selected
+            else:
+                yield value, label, selected
+
+    def process_formdata(self, valuelist):
+        if valuelist and valuelist[0] == '':
+            valuelist = ['__None']
+        return super().process_formdata(valuelist)
+
+
+def create_test_result_form(detail_id):
+    class SoftwareRequestTestResultForm(ModelForm):
+        class Meta:
+            model = SoftwareRequestTestResult
+
+        issue = QuerySelectFieldRequired('Requirement',
+                                         query_factory=lambda: SoftwareIssues.query.filter(SoftwareIssues.accepted_at != None,
+                                                                                           SoftwareIssues.software_request_detail_id==detail_id).all(),
+                                         allow_blank=True,
+                                         blank_text='กรุณาเลือก Requirement',
+                                         get_label='issue',
+                                         render_kw={'required': True})
+    return SoftwareRequestTestResultForm
