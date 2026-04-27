@@ -277,8 +277,8 @@
                                                                     {{ timeline.status }}
                                                                 </span>
                                                             </td>
-                                                            <td>{{ timeline.start.strftime('%d/%m/%Y') }}</td>
-                                                            <td>{{ timeline.estimate.strftime('%d/%m/%Y') }}</td>
+                                                            <td>{{ timeline.start|localdate }}</td>
+                                                            <td>{{ timeline.estimate|localdate }}</td>
                                                             <td>{{ timeline.admin.fullname }}</td>
                                                             <td>
                                                                 <div class="field has-addons">
@@ -330,7 +330,7 @@
                         {% endif %}
                         <div class="field is-horizontal">
                             <div class="field-label">
-                                <label class="label">Issues</label>
+                                <label class="label">Issue/Request</label>
                             </div>
                             <div class="field-body">
                                 <div class="field">
@@ -340,12 +340,11 @@
                                                 <tr>
                                                     <th>Label</th>
                                                     <th>Detail</th>
+                                                    <th>Phase</th>
                                                     <th>Status</th>
+                                                    <th>Start</th>
+                                                    <th>End</th>
                                                     <th>Staff</th>
-                                                    <th>Created By</th>
-                                                    <th>Created At</th>
-                                                    <th>Updated By</th>
-                                                    <th>Updated At</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -371,6 +370,7 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>{{ issue.issue }}</td>
+                                                    <td>{{ issue.phase.phase }}</td>
                                                     <td>
                                                         <span class="tag {{ issue.status_color }}">{{ issue.status }}</span>
                                                         <a hx-swap="innerHTML"
@@ -381,11 +381,9 @@
                                                             </span>
                                                         </a>
                                                     </td>
+                                                    <td>{{ issue.start|localdate }}</td>
+                                                    <td>{{ issue.end|localdate }}</td>
                                                     <td>{{ issue.staff.fullname }}</td>
-                                                    <td>{{ issue.creator.fullname }}</td>
-                                                    <td>{{ issue.created_at|localdatetime }}</td>
-                                                    <td>{{ issue.updater.fullname or '' }}</td>
-                                                    <td>{{ issue.updated_at|localdatetime or '' }}</td>
                                                 </tr>
                                             {% endfor %}
                                             </tbody>
@@ -471,6 +469,16 @@
         $(document).ready(function () {
             $.fn.dataTable.moment('DD/MM/YYYY');
             $('#timeline').DataTable({
+                order: [
+                    [4, 'asc'],
+                    [5, 'asc']
+                ],
+                lengthChange: false,
+                searching: false,
+                paging: false,
+                info: false
+            })
+            $('#issues').DataTable({
                 order: [
                     [4, 'asc'],
                     [5, 'asc']
