@@ -281,19 +281,17 @@
                     <h5 class="title is-size-4">ข้อมูลผลการทดสอบ</h5>
                     <div class="box">
                         <div class="field">
-                                <form method="post" action="{{ url_for('software_request.view_request', detail_id=detail.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <table class="table is-fullwidth is-striped" id="test_results">
-                                        <thead>
-                                        <tr>
-                                            <th>ผลการทดสอบ</th>
-                                            <th>รายละเอียด</th>
-                                            <th>วันที่บันทึกผล</th>
-                                            <th>ผู้บันทึกผล</th>
-                                            <th>หมายเหตุ</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
+                            <form method="post" action="{{ url_for('software_request.view_request', detail_id=detail.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <table class="table is-fullwidth is-striped" id="test_results">
+                                    <thead>
+                                        <th>ผลการทดสอบ</th>
+                                        <th>รายละเอียด</th>
+                                        <th>วันที่บันทึกผล</th>
+                                        <th>ผู้บันทึกผล</th>
+                                        <th>หมายเหตุ</th>
+                                    </thead>
+                                    <tbody>
                                         {% for test_result in detail.test_results %}
                                             <tr>
                                                 <td>
@@ -339,12 +337,20 @@
                                                 </td>
                                             </tr>
                                         {% endfor %}
-                                        </tbody>
-                                    </table>
-                                    {% if detail.test_results %}
+                                    </tbody>
+                                </table>
+                                <div class="field">
+                                    <label class="label">ความคิดเห็นเพิ่มเติม</label>
+                                    <div class="control">
+                                        <textarea class="textarea" name="note">{{ detail.note or '' }}</textarea>
+                                    </div>
+                                </div>
+                                {% if detail.test_results %}
+                                    <div class="field mt-1">
                                         <input type="submit" value="บันทีก" class="button is-info is-rounded">
-                                    {% endif %}
-                                </form>
+                                    </div>
+                                {% endif %}
+                            </form>
                         </div>
                     </div>
                     <div class="field is-grouped is-grouped-centered">
