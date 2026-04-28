@@ -513,11 +513,11 @@ def create_issue(detail_id=None, issue_id=None):
 @software_request.route('/request/test_result/edit/<int:test_result_id>', methods=['GET', 'POST'])
 def create_test_result(detail_id=None, test_result_id=None):
     if detail_id:
-        SoftwareRequestTestResultForm = create_test_result_form(detail_id=detail_id)
+        SoftwareRequestTestResultForm = create_test_result_form(detail_id=detail_id, has_note=False)
         form = SoftwareRequestTestResultForm()
     else:
         test_result = SoftwareRequestTestResult.query.get(test_result_id)
-        SoftwareRequestTestResultForm = create_test_result_form(detail_id=test_result.request_id)
+        SoftwareRequestTestResultForm = create_test_result_form(detail_id=test_result.request_id, has_note=False)
         form = SoftwareRequestTestResultForm(obj=test_result)
     if form.validate_on_submit():
         if detail_id:
@@ -555,3 +555,21 @@ def delete_test_result(test_result_id):
     resp = make_response()
     resp.headers['HX-Refresh'] = 'true'
     return resp
+
+
+@software_request.route('/request/test_result/note/edit/<int:test_result_id>', methods=['GET', 'POST'])
+def create_note(test_result_id):
+    test_result = SoftwareRequestTestResult.query.get(test_result_id)
+    SoftwareRequestTestResultForm = create_test_result_form(detail_id=test_result.request_id, has_note=True)
+    form = SoftwareRequestTestResultForm(obj=test_result)
+    if form.validate_on_submit():
+        form.populate_obj(test_result)
+        db.session.add(test_result)
+        db.session.commit()
+        flash('บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
+        resp = make_response(render_template('software_request/note_template.html',
+                                             test_result=test_result))
+        resp.headers['HX-Trigger'] = 'closeNoteModal'
+        return resp
+    return render_template('software_request/modal/create_note_modal.html', form=form,
+                           test_result_id=test_result_id)
