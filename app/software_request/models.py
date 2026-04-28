@@ -225,10 +225,13 @@ class SoftwareRequestTestResult(db.Model):
     issue = db.relationship(SoftwareIssues, backref=db.backref('test_results'))
     created_at = db.Column('created_at', db.DateTime(timezone=True))
     updated_at = db.Column('updated_at', db.DateTime(timezone=True))
+    recorded_at = db.Column('recorded_at', db.DateTime(timezone=True))
     creator_id = db.Column('creator_id', db.ForeignKey('staff_account.id'))
     creator = db.relationship(StaffAccount, backref=db.backref('created_test_results'), foreign_keys=[creator_id])
     updater_id = db.Column('updater_id', db.ForeignKey('staff_account.id'))
     updater = db.relationship(StaffAccount, backref=db.backref('updated_test_results'), foreign_keys=[updater_id])
+    recorder_id = db.Column('recorder_id', db.ForeignKey('staff_account.id'))
+    recorder = db.relationship(StaffAccount, backref=db.backref('recorded_test_results'), foreign_keys=[recorder_id])
     request_id = db.Column('request_id', db.ForeignKey('software_request_details.id'))
     request = db.relationship(SoftwareRequestDetail, backref=db.backref('test_results'))
 
