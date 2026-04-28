@@ -9,7 +9,13 @@
             {% endif %}
         {% endif %}
     </td>
-    <td>{{ test_result.note }}</td>
+    <td>{{ test_result.recorded_at|localdatetime or '' }}</td>
+    <td>
+        {% if test_result.recorder %}
+            {{ test_result.recorder.fullname }}
+        {% endif %}
+    </td>
+    <td>{{ test_result.note or '' }}</td>
     <td>
         <div class="field has-addons">
             <div class="control">
