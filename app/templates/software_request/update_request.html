@@ -259,13 +259,13 @@
                                         <table class="table is-fullwidth" id="issues">
                                             <thead>
                                             <tr>
-                                                <th>Label</th>
-                                                <th>Detail</th>
+                                                <th>ประเภท</th>
+                                                <th>รายละเอียด</th>
                                                 <th>Phase</th>
-                                                <th>Status</th>
-                                                <th>Start</th>
-                                                <th>End</th>
-                                                <th>Staff</th>
+                                                <th>สภานะ</th>
+                                                <th>วันที่เริ่มต้น</th>
+                                                <th>วันที่สิ้นสุด</th>
+                                                <th>ผู้รับผิดชอบ</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -411,14 +411,12 @@
                                     <div class="control">
                                         <table class="table is-fullwidth is-striped" id="test_results">
                                             <thead>
-                                            <tr>
                                                 <th>รายละเอียด</th>
                                                 <th>ผลการทดสอบ</th>
                                                 <th>วันที่บันทึกผล</th>
                                                 <th>ผู้บันทึกผล</th>
                                                 <th>หมายเหตุ</th>
                                                 <th></th>
-                                            </tr>
                                             </thead>
                                             <tbody id="test_results">
                                             {% for test_result in detail.test_results %}
