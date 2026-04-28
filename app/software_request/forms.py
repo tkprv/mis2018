@@ -120,16 +120,16 @@ class QuerySelectFieldRequired(QuerySelectField):
         return super().process_formdata(valuelist)
 
 
-def create_test_result_form(detail_id):
+def create_test_result_form(detail_id, has_note=False):
     class SoftwareRequestTestResultForm(ModelForm):
         class Meta:
             model = SoftwareRequestTestResult
-
-        issue = QuerySelectFieldRequired('Requirement',
-                                         query_factory=lambda: SoftwareIssues.query.filter(SoftwareIssues.accepted_at != None,
-                                                                                           SoftwareIssues.software_request_detail_id==detail_id).all(),
-                                         allow_blank=True,
-                                         blank_text='กรุณาเลือก Requirement',
-                                         get_label='issue',
-                                         render_kw={'required': True})
+        if not has_note:
+            issue = QuerySelectFieldRequired('Requirement',
+                                             query_factory=lambda: SoftwareIssues.query.filter(SoftwareIssues.accepted_at != None,
+                                                                                               SoftwareIssues.software_request_detail_id==detail_id).all(),
+                                             allow_blank=True,
+                                             blank_text='กรุณาเลือก Requirement',
+                                             get_label='issue',
+                                             render_kw={'required': True})
     return SoftwareRequestTestResultForm
