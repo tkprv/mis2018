@@ -60,9 +60,21 @@ def condition_for_service_request():
     return render_template('software_request/condition_page.html')
 
 
-@software_request.route('/request/view/<int:detail_id>')
+@software_request.route('/request/view/<int:detail_id>', methods=['GET', 'POST'])
 def view_request(detail_id):
     detail = SoftwareRequestDetail.query.get(detail_id)
+    if request.method == 'POST':
+        for form in request.form:
+            if form.startswith("result_"):
+                item_id = form.replace("result_", "")
+                value = request.form.get(form)
+                test_result = SoftwareRequestTestResult.query.get(item_id)
+                test_result.status = value
+                test_result.recorded_at = arrow.now('Asia/Bangkok').datetime
+                test_result.recorder_id = current_user.id
+                db.session.add(test_result)
+                db.session.commit()
+        flash('บันทึกผลเรียบร้อยแล้ว', 'success')
     return render_template('software_request/view_request.html', detail=detail)
 
 
