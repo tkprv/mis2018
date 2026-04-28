@@ -64,6 +64,10 @@ def condition_for_service_request():
 def view_request(detail_id):
     detail = SoftwareRequestDetail.query.get(detail_id)
     if request.method == 'POST':
+        note = request.form.get('note')
+        detail.note = note
+        db.session.add(detail)
+        db.session.commit()
         for form in request.form:
             if form.startswith("result_"):
                 item_id = form.replace("result_", "")
