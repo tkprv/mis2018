@@ -27,6 +27,8 @@
                                     class="tag is-danger is-medium"
                                 {% elif detail.status == 'ยกเลิก' %}
                                     class="tag is-dark is-medium"
+                                {% elif detail.status == 'เสร็จสิ้น' %}
+                                    class="tag is-info is-medium"
                                 {% endif %}
                                 >
                                     {{ detail.status }}
@@ -279,7 +281,6 @@
                     <h5 class="title is-size-4">ข้อมูลผลการทดสอบ</h5>
                     <div class="box">
                         <div class="field">
-                            <div class="control">
                                 <form method="post" action="{{ url_for('software_request.view_request', detail_id=detail.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <table class="table is-fullwidth is-striped" id="test_results">
@@ -340,16 +341,17 @@
                                         {% endfor %}
                                         </tbody>
                                     </table>
-                                    <input type="submit" value="บันทีก" class="button is-info is-rounded">
+                                    {% if detail.test_results %}
+                                        <input type="submit" value="บันทีก" class="button is-info is-rounded">
+                                    {% endif %}
                                 </form>
-                            </div>
-                            <div class="field is-grouped is-grouped-centered">
-                                <div class="control">
-                                    <a href="{{ url_for('software_request.index') }}" class="button">
-                                        Back
-                                    </a>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <a href="{{ url_for('software_request.index') }}" class="button">
+                                Back
+                            </a>
                         </div>
                     </div>
                 </div>
