@@ -113,6 +113,17 @@ def send_mail_to_voters(poll, message, title, attachments=None):
             base_send_mail(recp=recipients, title=title, message=message)
 
 
+def send_mail_to_unvoted_users(poll, message, title, attachments=None):
+    recipients = [f'{c.voter.email}@mahidol.ac.th' for c in poll.invitations if not c.voted_at]
+    if current_app.debug:
+        print(f'Mail sent to {recipients}. Message: {message}')
+    else:
+        if attachments:
+            send_mail_with_attachments(recp=recipients, title=title, message=message, attachments=attachments)
+        else:
+            base_send_mail(recp=recipients, title=title, message=message)
+
+
 @besttime_bp.route('/')
 def index():
     tab = request.args.get('tab')
@@ -342,6 +353,8 @@ def preview_master_datetime_slots():
 def edit_poll(poll_id):
     tab = request.args.get('tab')
     poll = BestTimePoll.query.get(poll_id)
+    start = poll.start
+    end = poll.end
     if request.method == 'GET':
         form = BestTimePollForm(obj=poll)
         form.chairman.data = BestTimePollVote.query.filter_by(poll=poll, role='chairman').first().voter
@@ -358,7 +371,6 @@ def edit_poll(poll_id):
             chairman = poll.get_chairman()
             form.populate_obj(poll)
             for invitee in form.invitees.data:
-                # Check for new invitees.
                 if not BestTimePollVote.query.filter_by(voter=invitee, poll=poll).first():
                     invitation = BestTimePollVote(voter=invitee, poll=poll)
                     db.session.add(invitation)
