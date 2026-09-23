@@ -2497,13 +2497,14 @@ def create_customer(customer_id=None):
                     )
                     item.file.data = file_name
         form.populate_obj(customer)
+        email = request.form.get('email')
         if customer_id is None:
             if current_user.is_authenticated:
                 customer.creator_id = current_user.id
-            account = ServiceCustomerAccount(email=form.email.data, customer_info=customer,
+            account = ServiceCustomerAccount(email=email, customer_info=customer,
                                              verify_datetime=arrow.now('Asia/Bangkok').datetime)
         else:
-            account.email = form.email.data
+            account.email = email
         db.session.add(account)
         db.session.add(customer)
         db.session.commit()
