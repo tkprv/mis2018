@@ -230,6 +230,10 @@
                     <span class="is-size-5">ประเมิน PA IDP FC</span>
                     <span class="tag is-rounded is-success">New</span>
                 </a>
+                <a class="panel-block" href="{{ url_for('staff.procurement_budget_tracking') }}">
+                    <span class="panel-icon"><i class="fas fa-chart-line"></i></span>
+                    <span class="is-size-5">ติดตามการใช้งบประมาณจัดซื้อครุภัณฑ์ตามแผน</span>
+                </a>
             </nav>
             {% endif %}
             {% if secretary_permission.can() or manager_permission.can() %}
@@ -246,6 +250,23 @@
                             <i class="fas fa-user-circle"></i>
                         </span>
                     <span class="is-size-5">ข้อมูลลงทะเบียนล่วงหน้า</span><br>
+                </a>
+            </nav>
+            {% endif %}
+            {% if has_work_approval_access %}
+            <nav class="panel staff-role-panel staff-role-panel--manager">
+                <p class="panel-heading"><i class="fas fa-user-check mr-2" aria-hidden="true"></i>สำหรับผู้อนุมัติการขอปฏิบัติงาน WFH และลงชื่อเข้าปฏิบัติงาน</p>
+                <a href="{{ url_for('staff.show_wfh_requests_for_approval') }}" class="panel-block">
+                    <span class="panel-icon">
+                        <i class="fas fa-house-laptop"></i>
+                    </span>
+                    <span class="is-size-5">อนุมัติการขอปฏิบัติงาน WFH</span>
+                </a>
+                <a href="{{ url_for('staff.login_summary') }}" class="panel-block">
+                    <span class="panel-icon">
+                        <i class="fas fa-clock"></i>
+                    </span>
+                    <span class="is-size-5">อนุมัติคำขอรับรองเวลาลงชื่อเข้าปฏิบัติงาน</span>
                 </a>
             </nav>
             {% endif %}

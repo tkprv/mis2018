@@ -630,7 +630,9 @@ class StaffLeaveApprover(db.Model):
         return self.account.personal_info.fullname
 
     def __str__(self):
-        return "{}->{}".format(self.account.email, self.requester.email)
+        approver = self.account.email if self.account else self.approver_account_id
+        requester = self.requester.email if self.requester else self.staff_account_id
+        return "{}->{}".format(approver, requester)
 
 
 class StaffLeaveApproval(db.Model):
@@ -966,6 +968,7 @@ class StaffSeminarApproval(db.Model):
     seminar_attend = db.relationship('StaffSeminarAttend', backref=db.backref('seminar_approval')
                                      , foreign_keys=[seminar_attend_id])
     updated_at = db.Column('updated_at', db.DateTime(timezone=True))
+    approved_at = db.Column('approved_at', db.Date())
     is_approved = db.Column('is_approved', db.Boolean(), default=True)
     approval_comment = db.Column('approval_comment', db.String())
     final_approver_account_id = db.Column('final_approver_account_id', db.ForeignKey('staff_account.id'))
@@ -979,7 +982,7 @@ class StaffSeminarApproval(db.Model):
     attend = db.relationship('StaffSeminarAttend',
                              secondary=seminar_approval_attend_assoc_table,
                              backref=db.backref('seminar_approval_attendee', lazy='dynamic'))
-
+    is_final_approved = db.Column('is_final_approved', db.Boolean())
 
 class StaffWorkLogin(db.Model):
     __tablename__ = 'staff_work_logins'
@@ -1003,10 +1006,40 @@ class StaffWorkLogin(db.Model):
     note = db.Column('note', db.Text())
     creator_id = db.Column('creator_id', db.ForeignKey('staff_account.id'))
     creator = db.relationship('StaffAccount', foreign_keys=[creator_id])
+    request_id = db.Column('request_id', db.ForeignKey('staff_request_work_logins.id'), nullable=True)
+    approved_by_id = db.Column('approved_by_id', db.ForeignKey('staff_account.id'), nullable=True)
+    approved_by = db.relationship('StaffAccount', foreign_keys=[approved_by_id])
 
     @staticmethod
     def generate_date_id(date):
         return date.strftime('%Y%m%d')
+
+
+class StaffDailyAttendance(db.Model):
+    __tablename__ = 'staff_daily_attendance'
+    id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
+    staff_id = db.Column('staff_id', db.ForeignKey('staff_account.id'), nullable=False)
+    attendance_date = db.Column('attendance_date', db.Date(), nullable=False)
+    status = db.Column('status', db.String(32), nullable=False)
+    first_checkin_at = db.Column('first_checkin_at', db.DateTime(timezone=True), nullable=True)
+    last_checkout_at = db.Column('last_checkout_at', db.DateTime(timezone=True), nullable=True)
+    worked_minutes = db.Column('worked_minutes', db.Integer(), nullable=True)
+    source = db.Column('source', db.String(30), nullable=True)
+    source_record_id = db.Column('source_record_id', db.Integer(), nullable=True)
+    created_by_id = db.Column('created_by_id', db.ForeignKey('staff_account.id'), nullable=True)
+    approved_by_id = db.Column('approved_by_id', db.ForeignKey('staff_account.id'), nullable=True)
+    calculated_at = db.Column('calculated_at', db.DateTime(timezone=True), nullable=False)
+    note = db.Column('note', db.Text(), nullable=True)
+
+    staff = db.relationship('StaffAccount', foreign_keys=[staff_id],
+                            backref=db.backref('daily_attendance', lazy='dynamic'))
+    created_by = db.relationship('StaffAccount', foreign_keys=[created_by_id])
+    approved_by = db.relationship('StaffAccount', foreign_keys=[approved_by_id])
+
+    __table_args__ = (
+        db.UniqueConstraint('staff_id', 'attendance_date', name='uq_staff_daily_attendance_staff_date'),
+        db.Index('ix_staff_daily_attendance_date_status', 'attendance_date', 'status'),
+    )
 
 
 class StaffRequestWorkLogin(db.Model):

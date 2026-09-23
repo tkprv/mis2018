@@ -4,7 +4,7 @@ import arrow
 import os
 from collections import namedtuple
 from flask_wtf.csrf import generate_csrf
-from flask import render_template, request, redirect, url_for, current_app, make_response, flash
+from flask import render_template, request, redirect, url_for, current_app, make_response, flash, abort
 from flask_login import login_required, current_user
 from flask_mail import Message
 from app.linebot_compat import LineBotApiError, TextSendMessage
@@ -13,6 +13,8 @@ from app.besttime import besttime_bp
 from app.besttime.forms import BestTimePollMessageForm, BestTimePollForm, BestTimePollVoteForm, BestTimeMailForm
 from app.besttime.models import *
 from app.main import mail
+from app.procurement.models import ProcurementPlan, ProcurementPlanCommitteeMember
+from app.roles import procurement_plan_permission
 from app.staff.views import send_mail as base_send_mail
 
 VoteHour = namedtuple('VoteHour', ['start', 'end'])
@@ -201,12 +203,30 @@ def add_datetime_slot_choices(form, datetime_slot_field):
 @login_required
 def add_poll():
     tab = request.args.get('tab')
+    procurement_plan_id = request.args.get('procurement_plan_id', type=int)
+    return_to_plan = request.args.get('return_to_plan', type=int)
+    return_to_staff = request.args.get('return_to_staff', type=int) == 1
+    procurement_plan = None
+    if procurement_plan_id:
+        procurement_plan = ProcurementPlan.query.get_or_404(procurement_plan_id)
+        is_chairman = ProcurementPlanCommitteeMember.query.filter_by(
+            plan_id=procurement_plan.id,
+            staff_id=current_user.id,
+            role='chairman',
+        ).first() is not None
+        if return_to_staff and not is_chairman:
+            abort(403)
+        if not return_to_staff and not procurement_plan_permission.can() and not is_chairman:
+            abort(403)
+        if procurement_plan.committee_members.count() == 0:
+            abort(400)
     form = BestTimePollForm()
     if request.method == 'POST':
         add_datetime_slot_choices(form, form.datetime_slots)
         if form.validate_on_submit():
             poll = BestTimePoll(creator=current_user)
             form.populate_obj(poll)
+            poll.procurement_plan = procurement_plan
             chair_invitation = BestTimePollVote(voter=form.chairman.data, poll=poll, role='chairman')
             db.session.add(chair_invitation)
             for voter in form.invitees.data:
@@ -256,6 +276,12 @@ def add_poll():
                         pass
             else:
                 print('msg', msg, 'user', [c.voter.line_id for c in poll.invitations])
+            if return_to_plan and procurement_plan and return_to_plan == procurement_plan.id:
+                if return_to_staff:
+                    return redirect(url_for('staff.procurement_budget_plan_detail',
+                                            plan_id=procurement_plan.id,
+                                            fiscal_year=procurement_plan.fiscal_year))
+                return redirect(url_for('procurement.procurement_plan_detail', plan_id=procurement_plan.id))
             return redirect(url_for('besttime.index', tab=tab))
         else:
             return f'{form.errors}'
@@ -514,17 +540,59 @@ def close_poll(poll_id):
     return redirect(url_for('besttime.index', tab=tab))
 
 
+def _populate_vote_form(form, poll, vote=None):
+    voted_time_slots = []
+    if vote:
+        voted_time_slots = [t.start.astimezone(BKK_TZ).strftime('%Y-%m-%d#%H:%M - ')
+                            + t.end.astimezone(BKK_TZ).strftime('%H:%M')
+                            for t in vote.datetime_slots]
+
+    dates = set()
+    for slot in poll.master_datetime_slots:
+        slot_date = slot.start.astimezone(BKK_TZ).date()
+        if slot_date not in dates:
+            form.date_time_slots.append_entry({'date': slot_date})
+            dates.add(slot_date)
+
+    for form_field in form.date_time_slots:
+        choices = []
+        for hour in vote_hours:
+            start = datetime.datetime.combine(form_field.date.data, hour.start, tzinfo=BKK_TZ)
+            end = datetime.datetime.combine(form_field.date.data, hour.end, tzinfo=BKK_TZ)
+            slot = BestTimeMasterDateTimeSlot.query.filter(
+                BestTimeMasterDateTimeSlot.start == start,
+                BestTimeMasterDateTimeSlot.end == end,
+                BestTimeMasterDateTimeSlot.poll_id == poll.id,
+            ).first()
+            if slot:
+                hour_text = f'#{hour.start.strftime("%H:%M")} - {hour.end.strftime("%H:%M")}'
+                hour_display = f'{hour.start.strftime("%H:%M")} - {hour.end.strftime("%H:%M")}'
+                choices.append((form_field.date.data.strftime('%Y-%m-%d') + hour_text, hour_display))
+        form_field.time_slots.choices = choices
+        form_field.time_slots.data = [choice[0] for choice in choices if choice[0] in voted_time_slots]
+
+
 @besttime_bp.route('/vote/polls/<int:poll_id>', methods=['GET', 'POST'])
 @login_required
 def vote_poll(poll_id):
     tab = request.args.get('tab')
+    return_to_plan = request.args.get('return_to_plan', type=int)
+    return_to_staff = request.args.get('return_to_staff', type=int) == 1
     poll = BestTimePoll.query.get(poll_id)
     today = arrow.now('Asia/Bangkok').date()
     if today < poll.vote_start_date or today > poll.vote_end_date:
         flash('ขณะนี้ไม่อยู่ในช่วงระยะเวลาการโหวตของแบบสำรวจ กรุณาตรวจสอบวันที่เปิดโหวตอีกครั้ง', 'danger')
+        if return_to_plan and poll.procurement_plan_id == return_to_plan:
+            return redirect(url_for('procurement.procurement_plan_poll_results',
+                                    plan_id=return_to_plan, poll_id=poll.id,
+                                    staff_view=1 if return_to_staff else None))
         return redirect(url_for('besttime.index', tab=tab))
     elif poll.closed_at:
         flash('แบบสำรวจนี้ปิดการโหวตแล้ว', 'warning')
+        if return_to_plan:
+            return redirect(url_for('procurement.procurement_plan_poll_results',
+                                    plan_id=return_to_plan, poll_id=poll.id,
+                                    staff_view=1 if return_to_staff else None))
         return redirect(url_for('besttime.index', tab=tab))
     # If the user has already voted this poll
     vote = BestTimePollVote.query.filter_by(poll_id=poll_id, voter=current_user).first()
@@ -605,37 +673,14 @@ def vote_poll(poll_id):
                 except LineBotApiError:
                     pass
 
+        if return_to_plan:
+            return redirect(url_for('procurement.procurement_plan_poll_results',
+                                    plan_id=return_to_plan, poll_id=poll.id,
+                                    staff_view=1 if return_to_staff else None))
         return redirect(url_for('besttime.index', tab=tab))
 
     if request.method == 'GET':
-        if vote:
-            voted_time_slots = [t.start.astimezone(BKK_TZ).strftime('%Y-%m-%d#%H:%M - ')
-                                + t.end.astimezone(BKK_TZ).strftime('%H:%M')
-                                for t in vote.datetime_slots]
-
-        dates = set()
-        for slot in poll.master_datetime_slots:
-            if slot.start.astimezone(BKK_TZ).date() not in dates:
-                form.date_time_slots.append_entry({'date': slot.start.astimezone(BKK_TZ).date()})
-                dates.add(slot.start.date())
-
-        for _form_field in form.date_time_slots:
-            choices = []
-            for h in vote_hours:
-                start = datetime.datetime.combine(_form_field.date.data, h.start, tzinfo=BKK_TZ)
-                end = datetime.datetime.combine(_form_field.date.data, h.end, tzinfo=BKK_TZ)
-                _slot = BestTimeMasterDateTimeSlot.query \
-                    .filter(BestTimeMasterDateTimeSlot.start == start,
-                            BestTimeMasterDateTimeSlot.end == end,
-                            BestTimeMasterDateTimeSlot.poll_id == poll_id).first()
-                if _slot:
-                    hour_text = f'#{h.start.strftime("%H:%M")} - {h.end.strftime("%H:%M")}'
-                    hour_display = f'{h.start.strftime("%H:%M")} - {h.end.strftime("%H:%M")}'
-                    choices.append((_form_field.date.data.strftime('%Y-%m-%d') + hour_text, hour_display))
-            _form_field.time_slots.choices = choices
-            _form_field.time_slots.data = []
-            if vote:
-                _form_field.time_slots.data = [t[0] for t in choices if t[0] in voted_time_slots]
+        _populate_vote_form(form, poll, vote)
 
     return render_template('besttime/poll-form.html', form=form, poll=poll, tab=tab, message_form=message_form)
 
@@ -653,9 +698,24 @@ def delete_message(message_id):
 
 
 @besttime_bp.route('/vote/<int:slot_id>/mail', methods=['GET', 'POST'])
+@login_required
 def send_mail_to_committee(slot_id):
     tab = request.args.get('tab')
+    staff_view = request.args.get('staff_view', type=int) == 1
     slot = BestTimeDateTimeSlot.query.get(slot_id)
+    poll = slot.poll
+    is_plan_chairman = poll.procurement_plan_id and ProcurementPlanCommitteeMember.query.filter_by(
+        plan_id=poll.procurement_plan_id,
+        staff_id=current_user.id,
+        role='chairman',
+    ).first() is not None
+    if poll.procurement_plan_id:
+        if staff_view and not is_plan_chairman:
+            abort(403)
+        if not staff_view and not procurement_plan_permission.can() and not is_plan_chairman:
+            abort(403)
+    elif not poll.has_admin_role(current_user):
+        abort(403)
     form = BestTimeMailForm()
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -694,4 +754,5 @@ def send_mail_to_committee(slot_id):
         return resp
     form.message.data = f'''เรียนกรรมการทุกท่าน\n\nขอแจ้งสรุปวันประชุม {slot.poll.title} เป็นวันที่ {slot}\n\nขอแสดงความนับถือ\n\n{slot.poll.creator.fullname}'''
     return render_template('besttime/modals/mail_form.html',
-                           form=form, slot_id=slot_id, poll=slot.poll, tab=tab)
+                           form=form, slot_id=slot_id, poll=slot.poll, tab=tab,
+                           staff_view=staff_view)

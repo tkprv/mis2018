@@ -27,6 +27,30 @@
                     </div>
                 </section>
             </div>
+            {% if recent_documents %}
+                <section class="docs-query-recent-card" aria-labelledby="docs-query-recent-title">
+                    <h2 id="docs-query-recent-title" class="docs-query-recent-heading">
+                        เอกสารที่เพิ่มล่าสุดในช่วง 2 สัปดาห์
+                    </h2>
+                    <div class="docs-query-recent-list">
+                        {% for document in recent_documents %}
+                            {% set document_description = document.summary or document.note or document.document_type or 'เอกสารใหม่ใน Docs-Query' %}
+                            <div class="docs-query-recent-item">
+                                <i class="fas fa-file-lines" aria-hidden="true"></i>
+                                <div>
+                                    <a href="https://drive.google.com/file/d/{{ document.drive_file_id }}/view" target="_blank" rel="noopener noreferrer">
+                                        {{ document.document_title or document.filename or 'เอกสารไม่มีชื่อ' }}
+                                    </a>
+                                    <span class="docs-query-recent-description">{{ document_description|striptags|truncate(160) }}</span>
+                                    {% if document.created_at %}
+                                        <span class="docs-query-recent-date">เพิ่มเมื่อ {{ document.created_at.strftime('%d/%m/%Y') }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
             <div class="columns is-centered">
                 <div class="column is-10-tablet is-9-desktop is-12-widescreen docs-query-page-column">
                     {% include "messages.html" %}
@@ -128,23 +152,55 @@
                                         <span class="tag is-info is-light">พบเอกสารที่อาจเกี่ยวข้อง {{ related_documents|length }} รายการ</span>
                                     {% endif %}
                                 </div>
-                                {% if answer %}
-                                    <article class="docs-query-answer">
+                                {% if short_answer %}
+                                    <article class="docs-query-answer docs-query-short-answer">
                                         <div class="docs-query-answer-heading">
-                                            <span class="docs-query-answer-label">AI SUMMARY</span>
+                                            <span class="docs-query-answer-label">SHORT ANSWER</span>
                                         </div>
-                                        <div class="docs-query-answer-body">{{ answer }}</div>
-                                        <p class="docs-query-ai-warning">
-                                            <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                                            กรุณาตรวจสอบจากเอกสารอ้างอิงก่อนนำไปใช้งาน
-                                        </p>
+                                        <div class="docs-query-answer-body">{{ short_answer }}</div>
                                     </article>
+                                {% endif %}
+                                {% if faq_results %}
+                                    <div class="mb-5">
+                                        <h3 class="title is-5 mb-1">คำตอบจาก FAQ</h3>
+                                        {% for result in faq_results %}
+                                            <article class="docs-query-answer docs-query-faq-answer">
+                                                <div class="docs-query-answer-heading">
+                                                    <span class="docs-query-answer-label">FAQ</span>
+                                                </div>
+                                                <h4 class="title is-6 mb-2">{{ result.faq.question }}</h4>
+                                                <div class="docs-query-answer-body" style="white-space: pre-line;">{{ result.faq.answer }}</div>
+                                                {% set faq_credit_name = result.faq.editor_name if result.faq.editor_name and result.faq.editor_name != result.faq.creator_name else result.faq.creator_name %}
+                                                {% set faq_credit_account = result.faq.editor if result.faq.editor_id else result.faq.creator %}
+                                                {% set faq_name_parts = faq_credit_name.split() %}
+                                                {% set faq_initials = faq_name_parts[0][:1] ~ (faq_name_parts[-1][:1] if faq_name_parts|length > 1 else '') %}
+                                                <p class="docs-query-faq-credit">
+                                                    <span class="docs-query-faq-avatar" aria-hidden="true">
+                                                        {% if faq_credit_account and faq_credit_account.personal_info and faq_credit_account.personal_info.image_url %}<img src="{{ faq_credit_account.personal_info.image_url }}" alt="">{% else %}{{ faq_initials }}{% endif %}
+                                                    </span>
+                                                    <span>{% if result.faq.editor_name and result.faq.editor_name != result.faq.creator_name %}แก้ไขล่าสุดโดย{% else %}ให้ข้อมูลโดย{% endif %} {{ faq_credit_name }}</span>
+                                                </p>
+                                            </article>
+                                        {% endfor %}
+                                    </div>
                                 {% endif %}
                                 {% if related_documents %}
                                     <div class="mb-3">
                                         <h3 class="title is-5 mb-1">เอกสารที่อาจเกี่ยวข้อง</h3>
                                         <p class="has-text-grey is-size-7">เอกสารเหล่านี้พบจากการค้นหาและอาจเกี่ยวข้องกับคำค้นของคุณ</p>
                                     </div>
+                                    {% if answer %}
+                                        <article class="docs-query-answer docs-query-ai-summary">
+                                            <div class="docs-query-answer-heading">
+                                                <span class="docs-query-answer-label">AI SUMMARY</span>
+                                            </div>
+                                            <div class="docs-query-answer-body">{{ answer }}</div>
+                                            <p class="docs-query-ai-warning">
+                                                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                                                กรุณาตรวจสอบจากเอกสารอ้างอิงก่อนนำไปใช้งาน
+                                            </p>
+                                        </article>
+                                    {% endif %}
                                     <div class="table-container docs-query-related-table-container">
                                         <table class="table is-fullwidth is-hoverable docs-query-related-table">
                                             <thead>
@@ -186,7 +242,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                {% else %}
+                                {% elif not faq_results %}
                                     <div class="notification is-light">
                                         ไม่พบเอกสาร
                                     </div>
@@ -246,6 +302,15 @@
         .docs-query-ai-ready { animation: docs-query-ready-blink 1.8s ease-in-out infinite; color: var(--theme-green); font-size: .65rem; }
         .docs-query-ai-ready i { color: var(--theme-green); font-size: .5rem; }
         @keyframes docs-query-ready-blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+        .docs-query-recent-card { background: rgba(239, 246, 255, .7); border: 1px solid rgba(50, 115, 220, .14); border-radius: 16px; margin: 0 auto 1.25rem; padding: .9rem 1rem; width: 80%; }
+        .docs-query-recent-heading { color: var(--theme-navy-deep); font-size: .78rem; font-weight: 800; margin-bottom: .55rem; }
+        .docs-query-recent-list { display: grid; gap: .45rem; margin: 0; }
+        .docs-query-recent-item { align-items: flex-start; background: rgba(255, 255, 255, .72); border-radius: 10px; display: flex; gap: .55rem; padding: .55rem .65rem; }
+        .docs-query-recent-item i { color: #3273dc; font-size: .72rem; margin-top: .25rem; }
+        .docs-query-recent-item a { color: var(--theme-navy-deep); font-size: .78rem; font-weight: 700; }
+        .docs-query-recent-item a:hover { color: #3273dc; }
+        .docs-query-recent-description { color: var(--theme-muted); display: block; font-size: .7rem; font-weight: 400; line-height: 1.4; margin-top: .12rem; }
+        .docs-query-recent-date { color: var(--theme-muted); display: block; font-size: .62rem; font-weight: 400; margin-top: .15rem; }
         .docs-query-ai-label { color: var(--theme-navy-deep); display: block; font-size: .85rem; font-weight: 800; margin-bottom: .55rem; }
 
         .docs-query-query-frame {
@@ -341,13 +406,68 @@
             top: .72rem;
         }
 
+        .docs-query-short-answer {
+            background: #102c2d;
+            border-color: #2bbbad;
+        }
+
+        .docs-query-short-answer::before { background: #1b5b5b; }
+        .docs-query-short-answer .docs-query-answer-label { color: #8df0d6; }
+        .docs-query-short-answer .docs-query-answer-body { color: #e2fff8; }
+
+        .docs-query-faq-answer {
+            background: #fff8d6;
+            border-color: #f2c94c;
+            color: #24324a;
+        }
+
+        .docs-query-faq-answer::before { background: #f2c94c; }
+        .docs-query-faq-answer .docs-query-answer-label { color: #8a5a00; }
+        .docs-query-faq-answer .docs-query-answer-body { color: #24324a; }
+
+        .docs-query-ai-summary {
+            background: #eef6ff;
+            border-color: #8bbaf0;
+            color: #243b5a;
+        }
+
+        .docs-query-ai-summary::before { background: #8bbaf0; }
+        .docs-query-ai-summary .docs-query-answer-label { color: #2f67a5; }
+        .docs-query-ai-summary .docs-query-answer-body { color: #243b5a; }
+        .docs-query-ai-summary .docs-query-ai-warning { color: #56708f; }
+        .docs-query-faq-credit {
+            align-items: center;
+            color: #6b5b27;
+            display: inline-flex;
+            font-size: .75rem;
+            gap: .45rem;
+            margin-top: .85rem;
+        }
+
+        .docs-query-faq-avatar {
+            align-items: center;
+            background: #f2c94c;
+            border-radius: 50%;
+            color: #5f4300;
+            display: inline-flex;
+            flex: 0 0 1.7rem;
+            font-size: .7rem;
+            font-weight: 800;
+            height: 1.7rem;
+            justify-content: center;
+            overflow: hidden;
+            width: 1.7rem;
+        }
+
+        .docs-query-faq-avatar img { height: 100%; object-fit: cover; width: 100%; }
+
         .docs-query-answer-heading {
             align-items: center;
             color: #b9d7ff;
             display: flex;
             font-size: .82rem;
             font-weight: 800;
-            justify-content: space-between;
+            justify-content: flex-end;
             letter-spacing: .02em;
             margin-bottom: .9rem;
             position: relative;
@@ -497,6 +617,7 @@
 
         @media screen and (max-width: 1023px) {
             .docs-query-ai-shell { margin-left: 0; margin-right: 0; width: 100%; }
+            .docs-query-recent-card { width: 100%; }
         }
 
         @media screen and (max-width: 768px) {
@@ -748,9 +869,10 @@
         .docs-query-popular-label {
             background: transparent;
             border: 0;
-            color: inherit;
+            color: #284b85;
             display: block;
             font: inherit;
+            font-weight: 600;
             min-width: 0;
             overflow: hidden;
             padding: 0;
