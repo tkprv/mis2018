@@ -2302,8 +2302,8 @@ def search_customer():
             .filter(or_(
                 ServiceCustomerInfo.cus_name.ilike(search_term),
                 ServiceCustomerInfo.taxpayer_identification_no.ilike(search_term),
-                ServiceCustomerInfo.email.ilike(search_term),
-                ServiceCustomerInfo.phone_number.ilike(search_term),
+                ServiceCustomerInfo.accounts.any(ServiceCustomerAccount.email.ilike(search_term)),
+                ServiceCustomerInfo.phone_number.ilike(search_term)
             ))
             .order_by(ServiceCustomerInfo.cus_name.asc())
             .limit(100)
