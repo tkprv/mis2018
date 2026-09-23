@@ -1312,7 +1312,6 @@ def customer_account():
         if not current_user.customer_info:
             account.customer_info = customer
             db.session.add(account)
-            customer.email = account.email
         db.session.add(customer)
         db.session.commit()
         flash('บันทึกข้อมูลเรียบร้อยแล้ว กรุณาเลือกแล็บ', 'success')
