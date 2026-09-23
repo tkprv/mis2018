@@ -189,7 +189,7 @@ class ServiceCustomerInfo(db.Model):
     __tablename__ = 'service_customer_infos'
     id = db.Column('id', db.Integer(), primary_key=True, autoincrement=True)
     cus_name = db.Column('cus_name', db.String())
-    email = db.Column('email', db.String(), info={'label': 'อีเมล'})
+    # email = db.Column('email', db.String(), info={'label': 'อีเมล'})
     taxpayer_identification_no = db.Column('taxpayer_identification_no', db.String(),
                                            info={'label': 'เลขประจำตัวผู้เสียภาษีอากร'})
     fax_no = db.Column('fax_no', db.String(), info={'label': 'fax'})
@@ -209,6 +209,11 @@ class ServiceCustomerInfo(db.Model):
                 return True
                 break
         return False
+
+    @property
+    def email(self):
+        for account in self.accounts:
+            return account.email
 
     @property
     def customer_name(self):
