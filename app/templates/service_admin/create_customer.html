@@ -93,12 +93,12 @@
                             </div>
                             <div class="field">
                                 <label class="label">
-                                    {{ form.email.label }}
+                                    อีเมล
                                     <span class="has-text-danger">*</span>
                                 </label>
                                 <div class="control has-icons-left is-expanded">
-                                    {{ form.email(class="input", id='cus_email', placeholder='ex. example@example.com',
-                                            oninput="syncContactInfo()") }}
+                                     <input class="input" type="email" id="cus_email" name="email" value="{{ account.email or '' }}"
+                                            placeholder="ex. example@example.com" oninput="syncContactInfo()" required>
                                     <span class="icon is-small is-left">
                                         <i class="fas fa-envelope"></i>
                                     </span>
