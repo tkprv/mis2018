@@ -263,7 +263,7 @@ class ServiceCustomerAttachment(db.Model):
     customer = db.relationship(ServiceCustomerInfo, backref=db.backref('attachments', cascade='all, delete-orphan'))
 
     def __str__(self):
-        return self.name
+        return self.file_name
 
 
 class ServiceCustomerAddress(db.Model):
