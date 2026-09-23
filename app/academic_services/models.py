@@ -194,6 +194,7 @@ class ServiceCustomerInfo(db.Model):
                                            info={'label': 'เลขประจำตัวผู้เสียภาษีอากร'})
     fax_no = db.Column('fax_no', db.String(), info={'label': 'fax'})
     phone_number = db.Column('phone_number', db.String(), info={'label': 'เบอร์โทรศัพท์'})
+    is_document_verified = db.Column('is_document_verified', db.Boolean())
     type_id = db.Column('type_id', db.ForeignKey('service_customer_types.id'))
     type = db.relationship('ServiceCustomerType', backref=db.backref('customers'))
     creator_id = db.Column('creator_id', db.ForeignKey('staff_account.id'))
