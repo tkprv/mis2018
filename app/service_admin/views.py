@@ -2505,6 +2505,8 @@ def create_customer(customer_id=None):
                                              verify_datetime=arrow.now('Asia/Bangkok').datetime)
         else:
             account.email = email
+        if customer.is_document_verified is not None:
+            customer.is_document_verified = None
         db.session.add(account)
         db.session.add(customer)
         db.session.commit()
