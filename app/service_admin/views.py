@@ -2464,9 +2464,25 @@ def view_overdue_invoice(invoice_id):
 @service_admin.route('/customer/view')
 @login_required
 def view_customer():
-    customers = ServiceCustomerInfo.query.all()
+    tab = request.args.get('tab')
+    if tab == 'not_attached':
+        customers = ServiceCustomerInfo.query.filter(
+            ServiceCustomerInfo.is_document_verified==None,
+            ~ServiceCustomerInfo.attachments.any()
+        )
+    elif tab == 'pending':
+        customers = ServiceCustomerInfo.query.filter(
+            ServiceCustomerInfo.is_document_verified == None,
+            ServiceCustomerInfo.attachments.any()
+        )
+    elif tab == 'rejected':
+        customers = ServiceCustomerInfo.query.filter_by(is_document_verified=False)
+    elif tab == 'approved':
+        customers = ServiceCustomerInfo.query.filter_by(is_document_verified=True)
+    else:
+        customers = ServiceCustomerInfo.query.yield_per(100)
     admin = ServiceAdmin.query.filter_by(admin_id=current_user.id).all()
-    return render_template('service_admin/view_customer.html', customers=customers, admin=admin)
+    return render_template('service_admin/view_customer.html', customers=customers, admin=admin, tab=tab)
 
 
 @service_admin.route('/customer/add', methods=['GET', 'POST'])
