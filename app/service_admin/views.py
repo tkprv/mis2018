@@ -2465,24 +2465,30 @@ def view_overdue_invoice(invoice_id):
 @login_required
 def view_customer():
     tab = request.args.get('tab')
-    if tab == 'not_attached':
-        customers = ServiceCustomerInfo.query.filter(
+    not_attached_query = ServiceCustomerInfo.query.filter(
             ServiceCustomerInfo.is_document_verified==None,
             ~ServiceCustomerInfo.attachments.any()
         )
-    elif tab == 'pending':
-        customers = ServiceCustomerInfo.query.filter(
+    pending_query = ServiceCustomerInfo.query.filter(
             ServiceCustomerInfo.is_document_verified == None,
             ServiceCustomerInfo.attachments.any()
         )
+    rejected_query = ServiceCustomerInfo.query.filter_by(is_document_verified=False)
+    approved_query = ServiceCustomerInfo.query.filter_by(is_document_verified=True)
+    all_query = ServiceCustomerInfo.query.yield_per(100)
+    if tab == 'not_attached':
+        customers = not_attached_query
+    elif tab == 'pending':
+        customers = pending_query
     elif tab == 'rejected':
-        customers = ServiceCustomerInfo.query.filter_by(is_document_verified=False)
+        customers = rejected_query
     elif tab == 'approved':
-        customers = ServiceCustomerInfo.query.filter_by(is_document_verified=True)
+        customers = approved_query
     else:
-        customers = ServiceCustomerInfo.query.yield_per(100)
+        customers = all_query
     admin = ServiceAdmin.query.filter_by(admin_id=current_user.id).all()
-    return render_template('service_admin/view_customer.html', customers=customers, admin=admin, tab=tab)
+    return render_template('service_admin/view_customer.html', customers=customers, admin=admin,
+                           tab=tab, not_attached_count=not_attached_query.count(), pending_count=pending_query.count())
 
 
 @service_admin.route('/customer/add', methods=['GET', 'POST'])
