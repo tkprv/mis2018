@@ -207,7 +207,6 @@ class ServiceCustomerInfo(db.Model):
         for address in self.addresses:
             if address.address_type == 'document':
                 return True
-                break
         return False
 
     @property
@@ -232,14 +231,14 @@ class ServiceCustomerInfo(db.Model):
 
     @property
     def status_document_verified(self):
-        if self.is_document_verified == True:
+        if self.is_document_verified is True:
             status = 'อนุมัติเรียบร้อย'
-        elif self.is_document_verified == False:
+        elif self.is_document_verified is False:
             status = 'ไม่อนุมัติ'
         elif not self.is_document_verified and self.attachments:
             status = 'รออนุมัติ'
         else:
-            status = 'ยังไม่มีการแนบเอกสาร'
+            status = 'ยังไม่แนบเอกสาร'
         return status
 
     @property
@@ -252,6 +251,18 @@ class ServiceCustomerInfo(db.Model):
             color = 'is-warning'
         else:
             color = 'is-light'
+        return color
+
+    @property
+    def status_document_verified_icon(self):
+        if self.is_document_verified is True:
+            color = '<i class="fas fa-check"></i>'
+        elif self.is_document_verified is False:
+            color = '<i class="fas fa-times"></i>'
+        elif not self.is_document_verified and self.attachments:
+            color = '<i class="fas fa-hourglass-half"></i>'
+        else:
+            color = '<i class="fas fa-inbox"></i>'
         return color
 
 
