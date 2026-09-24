@@ -230,6 +230,31 @@ class ServiceCustomerInfo(db.Model):
         for cus_contact in self.customer_contacts:
             return cus_contact.phone_number
 
+    @property
+    def status_document_verified(self):
+        if self.is_document_verified == True:
+            status = 'อนุมัติเรียบร้อย'
+        elif self.is_document_verified == False:
+            status = 'ไม่อนุมัติ'
+        elif not self.is_document_verified and self.attachments:
+            status = 'รออนุมัติ'
+        else:
+            status = 'ยังไม่มีการแนบเอกสาร'
+        return status
+
+    @property
+    def status_document_verified_color(self):
+        if self.is_document_verified is True:
+            color = 'is-success'
+        elif self.is_document_verified is False:
+            color = 'is-danger'
+        elif not self.is_document_verified and self.attachments:
+            color = 'is-warning'
+        else:
+            color = 'is-light'
+        return color
+
+
 
 class ServiceCustomerContact(db.Model):
     __tablename__ = 'service_customer_contacts'
