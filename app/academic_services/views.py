@@ -1312,6 +1312,8 @@ def customer_account():
         if not current_user.customer_info:
             account.customer_info = customer
             db.session.add(account)
+        if customer.is_document_verified is not None:
+            customer.is_document_verified = None
         db.session.add(customer)
         db.session.commit()
         flash('บันทึกข้อมูลเรียบร้อยแล้ว กรุณาเลือกแล็บ', 'success')
