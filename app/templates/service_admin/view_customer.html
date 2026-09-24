@@ -25,6 +25,7 @@
                         <th>เบอร์โทรศัพท์</th>
                         <th>เลขประจำตัวผู้เสียภาษีอากร</th>
                         <th>ที่อยู่</th>
+                        <th>สถานะ</th>
                         <th>Request</th>
                         <th style="width: 5em"></th>
                     </thead>
@@ -79,6 +80,12 @@
                                             </a>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    <span class="tag is-rounded {{ customer.status_document_verified_color }}">
+                                        <span class="icon">{{ customer.status_document_verified_icon|safe }}</span>
+                                        <span>{{ customer.status_document_verified }}</span>
+                                    </span>
                                 </td>
                                 <td>
                                     {% for account in customer.accounts %}
