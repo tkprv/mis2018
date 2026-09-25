@@ -2662,6 +2662,34 @@ def remove_attachment():
     return ""
 
 
+@service_admin.route('/customer/approve/<int:customer_id>', methods=['POST'])
+@login_required
+def approve_document_customer(customer_id):
+    tab = request.args.get('tab')
+    customer = ServiceCustomerInfo.query.get(customer_id)
+    customer.is_document_verified = True
+    db.session.add(customer)
+    db.session.commit()
+    flash('อนุมัติเรียบร้อยแล้ว', 'success')
+    resp = make_response()
+    resp.headers['HX-Redirect'] = url_for('service_admin.view_customer', tab=tab, customer_id=customer_id)
+    return resp
+
+
+@service_admin.route('/customer/disapprove/<int:customer_id>', methods=['POST'])
+@login_required
+def disapprove_document_customer(customer_id):
+    tab = request.args.get('tab')
+    customer = ServiceCustomerInfo.query.get(customer_id)
+    customer.is_document_verified = False
+    db.session.add(customer)
+    db.session.commit()
+    flash('ไม่อนุมัติเรียบร้อยแล้ว', 'success')
+    resp = make_response()
+    resp.headers['HX-Redirect'] = url_for('service_admin.view_customer', tab=tab, customer_id=customer_id)
+    return resp
+
+
 @service_admin.route('/customer/register/closing-page')
 def closing_page():
     return render_template('service_admin/closing_page.html')
