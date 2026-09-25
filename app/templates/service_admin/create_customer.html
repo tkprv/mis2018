@@ -241,7 +241,7 @@
                         <div class="control">
                             <a class="button"
                                {% if current_user.is_authenticated %}
-                                    href="{{ url_for('service_admin.view_customer') }}"
+                                    href="{{ url_for('service_admin.customer_index', tab=tab) }}"
                                {% else %}
                                     href="{{ url_for('service_admin.customer_register_index') }}"
                                {% endif %}

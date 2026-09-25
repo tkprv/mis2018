@@ -9,7 +9,7 @@
         <div class="columns is-centered">
             <div class="column">
                 <div class="buttons is-centered">
-                    <a class="button is-info" href="{{ url_for('service_admin.create_customer') }}">
+                    <a class="button is-info" href="{{ url_for('service_admin.create_customer', tab='all') }}">
                         <span class="icon">
                             <i class="fas fa-plus"></i>
                         </span>
@@ -19,7 +19,7 @@
                 <div class="tabs">
                     <ul>
                         <li {% if tab == 'not_send' %}class="is-active"{% endif %}>
-                            <a href="{{ url_for('service_admin.view_customer', tab='not_send') }}">
+                            <a href="{{ url_for('service_admin.customer_index', tab='not_send') }}">
                                 <span class="icon is-small"><i class="fas fa-inbox"></i></span>
                                 <span>ยังไม่แนบเอกสาร</span>
                                 {% if not_attached_count > 0 %}
@@ -28,7 +28,7 @@
                             </a>
                         </li>
                         <li {% if tab == 'pending' %}class="is-active"{% endif %}>
-                            <a href="{{ url_for('service_admin.view_customer', tab='pending') }}">
+                            <a href="{{ url_for('service_admin.customer_index', tab='pending') }}">
                                 <span class="icon is-small"><i class="fas fa-hourglass"></i></span>
                                 <span>รออนุมัติ</span>
                                 {% if pending_count > 0 %}
@@ -37,19 +37,19 @@
                             </a>
                         </li>
                         <li {% if tab == 'rejected' %}class="is-active"{% endif %}>
-                            <a href="{{ url_for('service_admin.view_customer', tab='rejected') }}">
+                            <a href="{{ url_for('service_admin.customer_index', tab='rejected') }}">
                                 <span class="icon is-small"><i class="fa fa-times"></i></span>
                                 <span>ไม่อนุมัติ</span>
                             </a>
                         </li>
                         <li {% if tab == 'approved' %}class="is-active"{% endif %}>
-                            <a href="{{ url_for('service_admin.view_customer', tab='approved') }}">
+                            <a href="{{ url_for('service_admin.customer_index', tab='approved') }}">
                                 <span class="icon is-small"><i class="fa fa-check"></i></span>
                                 <span>อนุมัติ</span>
                             </a>
                         </li>
                         <li {% if tab == 'all' %}class="is-active"{% endif %}>
-                            <a href="{{ url_for('service_admin.view_customer', tab='all') }}">
+                            <a href="{{ url_for('service_admin.customer_index', tab='all') }}">
                                 <span class="icon is-small"><i class="fas fa-list-ul"></i></span>
                                 <span>ทั้งหมด</span>
                             </a>
@@ -169,7 +169,8 @@
                                     <div class="field has-addons">
                                         <div class="control">
                                             <a class="button is-small is-warning is-light is-rounded"
-                                               href="{{ url_for('service_admin.create_customer', customer_id=customer.id) }}">
+                                               href="{{ url_for('service_admin.create_customer', customer_id=customer.id,
+                                               tab='all') }}">
                                                 <span class="icon">
                                                     <i class="fas fa-pencil-alt"></i>
                                                 </span>
