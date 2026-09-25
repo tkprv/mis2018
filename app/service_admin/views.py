@@ -34,7 +34,7 @@ from app.service_admin.forms import *
 from app.main import app, get_credential
 from app.main import mail
 from flask_mail import Message
-from ..roles import admin_permission
+from ..roles import central_admin_academic_service_permission
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -2500,7 +2500,9 @@ def customer_index():
         customers = all_query
     admin = ServiceAdmin.query.filter_by(admin_id=current_user.id).all()
     return render_template('service_admin/customer_index.html', customers=customers, admin=admin,
-                           tab=tab, not_attached_count=not_attached_query.count(), pending_count=pending_query.count())
+                           tab=tab, not_attached_count=not_attached_query.count(), pending_count=pending_query.count(),
+                           central_admin_academic_service_permission=central_admin_academic_service_permission)
+
 
 @service_admin.route('/customer/view/<int:customer_id>')
 @login_required
