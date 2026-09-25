@@ -1312,7 +1312,7 @@ def customer_account():
         if not current_user.customer_info:
             account.customer_info = customer
             db.session.add(account)
-        if customer.is_document_verified is not None:
+        if customer.is_document_verified is None or customer.is_document_verified == False:
             customer.is_document_verified = None
         db.session.add(customer)
         db.session.commit()
