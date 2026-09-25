@@ -997,6 +997,25 @@ def reset_password():
     return render_template('academic_services/reset_password.html', form=form)
 
 
+@academic_services.route('/login_by_token', methods=['GET', 'POST'])
+def login_by_token():
+    token = request.args.get('token')
+    serializer = TimedJSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
+    try:
+        token_data = serializer.loads(token, max_age=604800)
+    except:
+        return 'รหัสสำหรับทำการตั้งค่า password หมดอายุหรือไม่ถูกต้อง'
+    user = ServiceCustomerAccount.query.filter_by(email=token_data.get('email')).first()
+    if not user:
+        flash('ไม่พบชื่อบัญชีในฐานข้อมูล')
+        return redirect(url_for('academic_services.customer_index'))
+    else:
+        login_user(user)
+        session['user_type'] = 'service_customer'
+        identity_changed.send(current_app._get_current_object(), identity=Identity(user.id))
+        return redirect(url_for('academic_services.customer_account'))
+
+
 @academic_services.route('/customer/index', methods=['GET', 'POST'])
 def customer_index():
     labs = ServiceLab.query.all()
@@ -1300,6 +1319,7 @@ def account():
 def customer_account():
     menu = request.args.get('menu')
     account = ServiceCustomerAccount.query.get(current_user.id)
+    old_is_document_verified = account.customer_info.is_document_verified
     if current_user.customer_info:
         customer = ServiceCustomerInfo.query.get(current_user.customer_info_id)
         form = ServiceCustomerInfoForm(obj=customer)
@@ -1316,6 +1336,8 @@ def customer_account():
             customer.is_document_verified = None
         db.session.add(customer)
         db.session.commit()
+        if old_is_document_verified == False:
+            flash('บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
         flash('บันทึกข้อมูลเรียบร้อยแล้ว กรุณาเลือกแล็บ', 'success')
         return redirect(url_for('academic_services.lab_index', menu='new'))
     if not current_user.customer_info:
