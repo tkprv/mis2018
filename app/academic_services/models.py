@@ -232,7 +232,7 @@ class ServiceCustomerInfo(db.Model):
     @property
     def status_document_verified(self):
         if self.is_document_verified is True:
-            status = 'อนุมัติเรียบร้อย'
+            status = 'อนุมัติ'
         elif self.is_document_verified is False:
             status = 'ไม่อนุมัติ'
         elif not self.is_document_verified and self.attachments:

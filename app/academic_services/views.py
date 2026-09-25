@@ -34,7 +34,7 @@ from itsdangerous.url_safe import URLSafeTimedSerializer as TimedJSONWebSignatur
 from app.main import mail
 from flask_mail import Message
 from app.models import Holidays, Org
-from app.service_admin.forms import ServiceResultForm
+from app.service_admin.views import get_central_admin_academic_service
 
 localtz = timezone('Asia/Bangkok')
 
@@ -1336,7 +1336,20 @@ def customer_account():
             customer.is_document_verified = None
         db.session.add(customer)
         db.session.commit()
-        if old_is_document_verified == False:
+        central_admin_accounts = get_central_admin_academic_service()
+        if old_is_document_verified == False and central_admin_accounts:
+            scheme = 'http' if current_app.debug else 'https'
+            link = url_for("service_admin.view_customer", tab='pending', customer_id=account.customer_info_id,
+                           _external=True, _scheme=scheme)
+            title = f'''แจ้งเตือนการแก้ไขข้อมูลผู้รับบริการ'''
+            message = f'''เรียน แอดมินส่วนกลาง\n\n'''
+            message += f'''มีผู้รับบริการดำเนินการแก้ไขข้อมูลตามที่แจ้งเรียบร้อยแล้ว กรุณาตรวจสอบข้อมูลและอนุมัติรายการได้ที่ลิงก์ด้านล่าง\n'''
+            message += f'''{link}\n\n'''
+            message += f'''ระบบงานงานบริการวิชาการ'''
+            if current_app.debug:
+                send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
+            else:
+                print('message', message)
             flash('บันทึกข้อมูลเรียบร้อยแล้ว', 'success')
         flash('บันทึกข้อมูลเรียบร้อยแล้ว กรุณาเลือกแล็บ', 'success')
         return redirect(url_for('academic_services.lab_index', menu='new'))
