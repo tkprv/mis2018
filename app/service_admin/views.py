@@ -2475,7 +2475,7 @@ def view_overdue_invoice(invoice_id):
 
 @service_admin.route('/customer/view')
 @login_required
-def view_customer():
+def customer_index():
     tab = request.args.get('tab')
     not_attached_query = ServiceCustomerInfo.query.filter(
             ServiceCustomerInfo.is_document_verified==None,
@@ -2499,7 +2499,7 @@ def view_customer():
     else:
         customers = all_query
     admin = ServiceAdmin.query.filter_by(admin_id=current_user.id).all()
-    return render_template('service_admin/view_customer.html', customers=customers, admin=admin,
+    return render_template('service_admin/customer_index.html', customers=customers, admin=admin,
                            tab=tab, not_attached_count=not_attached_query.count(), pending_count=pending_query.count())
 
 
@@ -2560,7 +2560,7 @@ def create_customer(customer_id=None):
             message += f'''ระบบงานตรวจวิเคราะห์'''
             send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
         if current_user.is_authenticated:
-            return redirect(url_for('service_admin.view_customer'))
+            return redirect(url_for('service_admin.customer_index'))
         else:
             return redirect(url_for('service_admin.closing_page'))
 
