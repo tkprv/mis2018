@@ -42,6 +42,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, SimpleDocTemplate, Paragraph, TableStyle, Table, Spacer, KeepTogether, PageBreak
 
+from ..staff.models import Role
+
 localtz = timezone('Asia/Bangkok')
 TYPHOON_API_URL = 'https://api.opentyphoon.ai/v1/chat/completions'
 TYPHOON_MODEL = os.getenv('SCB_TYPHOON_MODEL', 'typhoon-v2.5-30b-a3b-instruct')
@@ -101,6 +103,16 @@ def sort_quotation_item(items):
     else:
         priority = 0
     return (priority, items.id)
+
+
+def get_central_admin_academic_service():
+    roles = Role.query.filter_by(role_need='central_admin_academic_service')
+    if roles:
+        accounts = [account for role in roles for account in role.staff_account]
+    else:
+        accounts = None
+    return accounts
+
 
 
 def build_notification(invoice, service_request, link):
@@ -2536,10 +2548,22 @@ def create_customer(customer_id=None):
             flash('แก้ไขข้อมูลสำเร็จ', 'success')
         else:
             flash('เพิ่มลูกค้าสำเร็จ', 'success')
+        central_admin_accounts = get_central_admin_academic_service()
+        if not customer_id and central_admin_accounts:
+            scheme = 'http' if current_app.debug else 'https'
+            link = url_for("service_admin.view_customer", tab='pending', customer_id=customer_id, _external=True,
+                           _scheme=scheme)
+            title = f'''แจ้งเตือนการลงทะเบียนผู้รับบริการใหม่'''
+            message = f'''เรียน แอดมินส่วนกลาง\n\n'''
+            message += f'''มีผู้รับบริการที่ดำเนินการลงทะเบียนเพื่อรับบริการเรียบร้อยแล้ว กรุณาตรวจสอบข้อมูลและอนุมัติรายการได้ที่ลิงก์ด้านล่าง\n'''
+            message += f'''{link}\n\n'''
+            message += f'''ระบบงานตรวจวิเคราะห์'''
+            send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
         if current_user.is_authenticated:
             return redirect(url_for('service_admin.view_customer'))
         else:
             return redirect(url_for('service_admin.closing_page'))
+
     else:
         for er in form.errors:
             flash("{} {}".format(er, form.errors[er]), 'danger')
