@@ -18,6 +18,7 @@ from reportlab.lib.pagesizes import A4
 from sqlalchemy.orm import make_transient, joinedload, selectinload
 from app.linebot_compat import LineBotApiError, TextSendMessage
 from app.auth.views import line_bot_api
+from itsdangerous.url_safe import URLSafeTimedSerializer as TimedJSONWebSignatureSerializer
 from app.academic_services.forms import BacteriaSterilityTestRequestForm, BacteriaAntimicrobialActivityRequestForm, \
     VirusAirDisinfectionRequestForm, BacteriaDisinfectionRequestForm, VirusDisinfectionRequestForm, \
     HeavyMetalRequestForm, FoodSafetyRequestForm, ProteinIdentificationRequestForm, SDSPageRequestForm, \
@@ -2567,13 +2568,15 @@ def create_customer(customer_id=None):
             message = f'''เรียน แอดมินส่วนกลาง\n\n'''
             message += f'''มีผู้รับบริการที่ดำเนินการลงทะเบียนเพื่อรับบริการเรียบร้อยแล้ว กรุณาตรวจสอบข้อมูลและอนุมัติรายการได้ที่ลิงก์ด้านล่าง\n'''
             message += f'''{link}\n\n'''
-            message += f'''ระบบงานตรวจวิเคราะห์'''
-            send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
+            message += f'''ระบบงานงานบริการวิชาการ'''
+            if not current_app.debug:
+                send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
+            else:
+                print('message', message)
         if current_user.is_authenticated:
             return redirect(url_for('service_admin.customer_index', tab=tab))
         else:
             return redirect(url_for('service_admin.closing_page'))
-
     else:
         for er in form.errors:
             flash("{} {}".format(er, form.errors[er]), 'danger')
@@ -2671,6 +2674,17 @@ def approve_document_customer(customer_id):
     db.session.add(customer)
     db.session.commit()
     flash('อนุมัติเรียบร้อยแล้ว', 'success')
+    title_prefix = 'คุณ' if customer.type.type == 'บุคคล' else ''
+    title = f'''แจ้งผลการตรวจสอบข้อมูลการลงทะเบียน'''
+    message = f'''เรียน {title_prefix}{customer.cus_name}\n\n'''
+    message += f'''ตามที่ท่านได้ลงทะเบียนขอรับบริการตรวจวิเคราะห์จากคณะเทคนิคการแพทย์ มหาวิทยาลัยมหิดล\nขณะนี้ทางเจ้าหน้าที่ได้ตรวจสอบข้อมูลการลง'''
+    message += f'''ทะเบียนของท่าน และดำเนินการอนุมัติเรียบร้อยแล้ว\nท่านสามารถติดต่อขอรับบริการตรวจวิเคราะห์กับคณะเทคนิคการแพทย์ มหาวิทยาลัยมหิดลได้ตาม'''
+    message += f'''ช่องทางที่กำหนด\n\n'''
+    message += f'''หมายเหตุ : อีเมลฉบับนี้จัดส่งโดยระบบอัตโนมัติ โปรดอย่าตอบกลับมายังอีเมลนี้\n\n'''
+    message += f'''ขอขอบพระคุณที่ใช้บริการ\n\n'''
+    message += f'''ระบบงานบริการตรวจวิเคราะห์\n'''
+    message += f'''คณะเทคนิคการแพทย์ มหาวิทยาลัยมหิดล'''
+    send_mail([account.email for account in customer.accounts], title, message)
     resp = make_response()
     resp.headers['HX-Redirect'] = url_for('service_admin.view_customer', tab=tab, customer_id=customer_id)
     return resp
@@ -2685,6 +2699,21 @@ def disapprove_document_customer(customer_id):
     db.session.add(customer)
     db.session.commit()
     flash('ไม่อนุมัติเรียบร้อยแล้ว', 'success')
+    scheme = 'http' if current_app.debug else 'https'
+    serializer = TimedJSONWebSignatureSerializer(app.config.get('SECRET_KEY'))
+    token = serializer.dumps({'email': customer.accounts[0].email})
+    link = url_for("academic_services.login_by_token", token=token, _external=True, _scheme=scheme)
+    title_prefix = 'คุณ' if customer.type.type == 'บุคคล' else ''
+    title = f'''แจ้งผลการตรวจสอบข้อมูลการลงทะเบียน'''
+    message = f'''เรียน {title_prefix}{customer.cus_name}\n\n'''
+    message += f'''ตามที่ท่านได้ลงทะเบียนขอรับบริการตรวจวิเคราะห์จากคณะเทคนิคการแพทย์ มหาวิทยาลัยมหิดล\nขณะนี้ทางเจ้าหน้าที่ได้ตรวจสอบข้อมูลการลง'''
+    message += f'''ทะเบียนของท่าน พบว่ามีข้อมูลบางส่วนที่ต้องแก้ไขเพิ่มเติม\nกรุณาดำเนินการแก้ไขข้อมูลให้ถูกต้องครบถ้วน ภายใน 7 วัน นับจากวันที่ได้รับอีเมลฉบับนี้ '''
+    message += f'โดยท่านสามารถแก้ไขข้อมูลได้ที่ลิงก์ด้านล่าง\n\n{link}\n\n'
+    message += f'''หมายเหตุ : อีเมลฉบับนี้จัดส่งโดยระบบอัตโนมัติ โปรดอย่าตอบกลับมายังอีเมลนี้\n\n'''
+    message += f'''ขอแสดงความนับถือ\n'''
+    message += f'''ระบบงานบริการตรวจวิเคราะห์\n'''
+    message += f'''คณะเทคนิคการแพทย์ มหาวิทยาลัยมหิดล'''
+    send_mail([account.email for account in customer.accounts], title, message)
     resp = make_response()
     resp.headers['HX-Redirect'] = url_for('service_admin.view_customer', tab=tab, customer_id=customer_id)
     return resp
