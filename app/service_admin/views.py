@@ -2473,7 +2473,7 @@ def view_overdue_invoice(invoice_id):
                            customer_id=customer_id)
 
 
-@service_admin.route('/customer/view')
+@service_admin.route('/customer/index')
 @login_required
 def customer_index():
     tab = request.args.get('tab')
@@ -2506,6 +2506,7 @@ def customer_index():
 @service_admin.route('/customer/add', methods=['GET', 'POST'])
 @service_admin.route('/customer/edit/<int:customer_id>', methods=['GET', 'POST'])
 def create_customer(customer_id=None):
+    tab = request.args.get('tab')
     if customer_id:
         customer = ServiceCustomerInfo.query.get(customer_id)
         account = ServiceCustomerAccount.query.filter_by(customer_info_id=customer_id).first()
@@ -2560,7 +2561,7 @@ def create_customer(customer_id=None):
             message += f'''ระบบงานตรวจวิเคราะห์'''
             send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
         if current_user.is_authenticated:
-            return redirect(url_for('service_admin.customer_index'))
+            return redirect(url_for('service_admin.customer_index', tab=tab))
         else:
             return redirect(url_for('service_admin.closing_page'))
 
@@ -2568,7 +2569,7 @@ def create_customer(customer_id=None):
         for er in form.errors:
             flash("{} {}".format(er, form.errors[er]), 'danger')
     return render_template('service_admin/create_customer.html', customer_id=customer_id,
-                           form=form, account=account)
+                           form=form, account=account, tab=tab)
 
 
 @service_admin.route('/api/customer/account/file/add', methods=['POST'])
