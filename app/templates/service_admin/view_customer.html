@@ -74,6 +74,39 @@
                         </table>
                     </div>
                 </div>
+                <div class="column">
+                    <h1 class="title has-text-centered">เอกสารเพิ่มเติม</h1>
+                </div>
+                <div class="column box">
+                    <div class="field" style="margin-top: .5em; margin-left: 1em; margin-bottom: .5em">
+                        {% if customer.attachments %}
+                            <div class="table-container">
+                                <table class="table is-fullwidth customer-detail-attachment-table">
+                                    <thead><tr><th>ชื่อเอกสาร</th><th>รายละเอียด</th><th class="has-text-centered">ไฟล์</th></tr></thead>
+                                    <tbody>
+                                    {% for attachment in customer.attachments %}
+                                        <tr>
+                                            <td>{{ attachment.file_name or '-' }}</td>
+                                            <td>{{ attachment.note or '-' }}</td>
+                                            <td class="has-text-centered">
+                                                {% if attachment.file %}
+                                                    <a class="button is-small is-link is-light"
+                                                       href="{{ url_for('service_admin.download_file', key=attachment.file,
+                                                       download_filename=attachment.file_name + '.pdf') }}">
+                                                        <span class="icon"><i class="fas fa-download"></i></span><span>ดาวน์โหลด</span>
+                                                    </a>
+                                                {% else %}-{% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="customer-detail-empty">ยังไม่มีเอกสารเพิ่มเติม</div>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="field is-grouped is-grouped-centered">
                     <div class="control">
                         <a class="button" href="{{ url_for('service_admin.customer_index', tab=tab) }}">
