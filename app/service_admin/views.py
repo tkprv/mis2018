@@ -2502,6 +2502,13 @@ def customer_index():
     return render_template('service_admin/customer_index.html', customers=customers, admin=admin,
                            tab=tab, not_attached_count=not_attached_query.count(), pending_count=pending_query.count())
 
+@service_admin.route('/customer/view/<int:customer_id>')
+@login_required
+def view_customer(customer_id):
+    tab = request.args.get('tab')
+    customer = ServiceCustomerInfo.query.get(customer_id)
+    return render_template('service_admin/view_customer.html', customer=customer, tab=tab)
+
 
 @service_admin.route('/customer/add', methods=['GET', 'POST'])
 @service_admin.route('/customer/edit/<int:customer_id>', methods=['GET', 'POST'])
