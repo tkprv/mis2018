@@ -242,7 +242,7 @@
                             <tr>
                                 <th>ห้องปฏิบัติการ</th>
                                 <th>บริการ</th>
-                                <th>เลขที่คำขอ</th>
+                                <th>Request ID</th>
                                 <th>วันที่ยื่นคำขอ</th>
                                 <th>สถานะ</th>
                             </tr>
@@ -260,7 +260,7 @@
                                                 {{ service_request.status.customer_status or service_request.status.admin_status or '-' }}
                                             </span>
                                         {% else %}
-                                            -
+                                            <span class="tag is-light">ยังไม่ระบุสถานะ</span>
                                         {% endif %}
                                     </td>
                                 </tr>
