@@ -2535,7 +2535,7 @@ def create_customer(customer_id=None):
         form.populate_obj(customer)
         email = request.form.get('email')
         if customer_id is None:
-            if current_user.is_authenticated:
+            if current_user.is_authenticated and user_type and user_type == 'staff':
                 customer.creator_id = current_user.id
             account = ServiceCustomerAccount(email=email, customer_info=customer,
                                              verify_datetime=arrow.now('Asia/Bangkok').datetime)
