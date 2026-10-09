@@ -2476,6 +2476,28 @@ def external_lab_index():
     return render_template('service_admin/external_lab_index.html', labs=labs, customer_id=customer_id)
 
 
+@service_admin.route('/request/external-lab/all/<int:sub_lab_id>')
+@login_required
+def external_lab_request_index(sub_lab_id):
+    customer_id = request.args.get('customer_id', type=int)
+    sub_lab = ServiceSubLab.query.get(sub_lab_id)
+
+    service_requests = (
+        ServiceRequest.query
+        .options(joinedload(ServiceRequest.status), joinedload(ServiceRequest.customer))
+        .filter(ServiceRequest.sub_lab_id == sub_lab.id)
+        .order_by(ServiceRequest.created_at.desc(), ServiceRequest.id.desc())
+        .all()
+    )
+
+    return render_template(
+        'service_admin/external_lab_request_index.html',
+        sub_lab=sub_lab,
+        customer_id=customer_id,
+        service_requests=service_requests,
+    )
+
+
 @service_admin.route('/request/external-lab/add/<int:sub_lab_id>', methods=['GET', 'POST'])
 @login_required
 def create_request_id(sub_lab_id):
