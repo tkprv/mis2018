@@ -303,6 +303,16 @@ class ServiceCustomerAttachment(db.Model):
     customer_id = db.Column('customer_id', db.ForeignKey('service_customer_infos.id'))
     customer = db.relationship(ServiceCustomerInfo, backref=db.backref('attachments', cascade='all, delete-orphan'))
 
+    @property
+    def category_tag(self):
+        if self.category:
+            if self.category == 'เอกสารจำเป็น':
+                return 'is-info is-light'
+            else:
+                return 'is-light'
+        else:
+            return 'is-light'
+
     def __str__(self):
         return self.file_name
 
