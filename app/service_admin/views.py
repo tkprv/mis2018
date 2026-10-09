@@ -2501,6 +2501,7 @@ def external_lab_request_index(sub_lab_id):
 @service_admin.route('/request/external-lab/add/<int:sub_lab_id>', methods=['GET', 'POST'])
 @login_required
 def create_request_id(sub_lab_id):
+    request_index = request.args.get('request_index')
     customer_id = request.args.get('customer_id', type=int)
     sub_lab = ServiceSubLab.query.get(sub_lab_id)
     customer_account = ServiceCustomerAccount.query.filter_by(customer_info_id=customer_id).first()
@@ -2513,8 +2514,12 @@ def create_request_id(sub_lab_id):
         db.session.add(service_request)
         db.session.commit()
         resp = make_response()
-        resp.headers['HX-Redirect'] = url_for('service_admin.external_lab_index', customer_id=customer_id)
-        flash('สร้าง Request ID ลำเร็จ', 'success')
+        if request_index:
+            resp.headers['HX-Redirect'] = url_for('service_admin.external_lab_request_index', customer_id=customer_id,
+                                                  sub_lab_id=sub_lab_id)
+        else:
+            resp.headers['HX-Redirect'] = url_for('service_admin.external_lab_index', customer_id=customer_id)
+        flash(f'สร้าง Request ID เลขที่ {service_request.request_no} สำเร็จ', 'success')
         return resp
     return redirect(url_for('service_admin.external_lab_index', customer_id=customer_id))
 
