@@ -2650,6 +2650,7 @@ def create_customer(customer_id=None):
             )
             if attachment is None:
                 attachment = ServiceCustomerAttachment(customer=customer)
+                required_attachments[document['key']] = attachment
             attachment.file_name = document['label']
             attachment.file = file_name
             attachment.category = REQUIRED_DOCUMENT_CATEGORY
@@ -2675,7 +2676,11 @@ def create_customer(customer_id=None):
                     item.file_name.data = '{}'.format(file_name.rsplit('.', 1)[0])
                     item.file.data = file_name
                     item.category.data = 'เอกสารเพิ่มเติม'
+        required_attachments_to_preserve = list(required_attachments.values())
         form.populate_obj(customer)
+        for attachment in required_attachments_to_preserve:
+            if attachment not in customer.attachments:
+                customer.attachments.append(attachment)
         email = request.form.get('email')
         if customer_id is None:
             if current_user.is_authenticated and user_type and user_type == 'staff':
