@@ -61,17 +61,17 @@
                                     <span class="external-service-copy">
                                         <strong>{{ sub_lab.sub_lab }}</strong>
                                         <small>{{ sub_lab.code or 'บริการตรวจวิเคราะห์' }}</small>
-                                        {% if sub_lab.requests %}
-                                            <small class="external-service-request-no">
-                                                <i class="fas fa-clock-rotate-left"></i>
-                                                Request ล่าสุด: {{ (sub_lab.requests|max(attribute='request_no')).request_no }}
-                                            </small>
-                                        {% else %}
-                                            <small class="external-service-request-no">
-                                                <i class="fas fa-clock-rotate-left"></i>
-                                                ยังไม่มี Request ID
-                                            </small>
-                                        {% endif %}
+{#                                        {% if sub_lab.requests %}#}
+{#                                            <small class="external-service-request-no">#}
+{#                                                <i class="fas fa-clock-rotate-left"></i>#}
+{#                                                Request ล่าสุด: {{ (sub_lab.requests|max(attribute='request_no')).request_no }}#}
+{#                                            </small>#}
+{#                                        {% else %}#}
+{#                                            <small class="external-service-request-no">#}
+{#                                                <i class="fas fa-clock-rotate-left"></i>#}
+{#                                                ยังไม่มี Request ID#}
+{#                                            </small>#}
+{#                                        {% endif %}#}
                                     </span>
                                     <span class="external-service-create-button">
                                         <i class="fas fa-plus"></i>
@@ -126,9 +126,9 @@
         .external-service-card:hover { border-color: #82b7e9; box-shadow: 0 8px 18px rgba(47,128,201,.12); color: inherit; transform: translateY(-2px); }
         .external-service-icon { align-items: center; background: #eef6ff; border-radius: 9px; color: #2f80c9; display: inline-flex; flex: 0 0 2rem; height: 2rem; justify-content: center; }
         .external-service-copy { display: flex; flex-direction: column; min-width: 0; }
-        .external-service-copy strong { color: #1e3152; font-size: .9rem; overflow-wrap: anywhere; }
-        .external-service-copy small { color: #8292a9; font-size: .72rem; margin-top: .12rem; }
-        .external-service-copy .external-service-request-no { color: #8292a9; font-size: .7rem; margin-top: .28rem; }
+        .external-service-copy strong { color: #1e3152; font-size: 1rem; overflow-wrap: anywhere; }
+        .external-service-copy small { color: #8292a9; font-size: 1rem; margin-top: .12rem; }
+        .external-service-copy .external-service-request-no { color: #8292a9; font-size: .9rem; margin-top: .28rem; }
         .external-service-request-no i { margin-right: .2rem; }
         .external-service-create-button { align-items: center; background: #2f80c9; border-radius: 9px; color: #fff; display: inline-flex; flex: 0 0 auto; font-size: .75rem; font-weight: 800; gap: .35rem; justify-content: center; margin-left: auto; padding: .65rem .75rem; white-space: nowrap; }
         .external-service-card:hover .external-service-create-button { background: #1e67aa; }
