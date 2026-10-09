@@ -40,7 +40,7 @@
                                     <span class="has-text-danger">*</span>
                                 </label>
                                 <div class="select">
-                                    {{ form.type(onchange="updateLabel(); syncContactInfo()") }}
+                                    {{ form.type(onchange="updateLabel(); updateRequiredDocuments(); syncContactInfo()") }}
                                 </div>
                             </div>
                             <div class="field">
@@ -170,6 +170,42 @@
                     </div>
                     <div class="column box">
                         <div class="field" style="margin-top: .5em; margin-left: 1em; margin-bottom: .5em">
+                            <b class="is-size-5">เอกสารที่จำเป็น</b>
+                        </div>
+                        <div class="field" style="margin-left: 1.5em; margin-right: 1.5em">
+                            {% for document in document_definitions %}
+                                {% set attachment = required_document_attachments.get(document.key) %}
+                                <div class="field required-document"
+                                     data-private-only="{{ 'true' if document.private_only else 'false' }}">
+                                    <label class="label">
+                                        {{ document.label }}
+                                        <span class="has-text-danger">*</span>
+                                    </label>
+                                    <div class="file" style="margin-bottom: .5em">
+                                        <label class="file-label">
+                                            <input class="file-input required-document-input" type="file"
+                                                   name="required_document_{{ document.key }}"
+                                                   accept=".pdf,.png,.jpg,.jpeg,.gif,.txt"
+                                                   data-required="{{ 'true' if not attachment or not attachment.file else 'false' }}"
+                                            >
+                                            <span class="file-cta">
+                                                <span class="file-icon"><i class="fas fa-upload"></i></span>
+                                                <span class="file-label">เลือกไฟล์…</span>
+                                            </span>
+                                            <span class="file-name">
+                                                {% if attachment and attachment.file %}
+                                                    {{ attachment.file }}
+                                                {% else %}
+                                                    กรุณาอัปโหลดไฟล์
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <hr>
+                        <div class="field" style="margin-top: .5em; margin-left: 1em; margin-bottom: .5em">
                             <b class="is-size-5">
                                 เอกสารเพิ่มเติม
                             </b>
@@ -295,11 +331,12 @@
         function updateLabel() {
             const typeSelect = document.querySelector('[name="type"]');
             const label = document.getElementById("cus-name-label");
-            if (typeSelect.value === "1") {
+            const typeName = typeSelect.options[typeSelect.selectedIndex]?.textContent.trim();
+            if (typeName === "บุคคล") {
                 label.innerHTML = '<label class="label">ชื่อ-นามสกุล<span class="has-text-danger ml-1">*</span></label>';
-            } else if (typeSelect.value === "2") {
+            } else if (typeName === "บริษัทเอกชน") {
                 label.innerHTML = '<label class="label">ชื่อบริษัท<span class="has-text-danger ml-1">*</span></label>';
-            } else if (typeSelect.value === "3") {
+            } else if (typeName === "หน่วยงานรัฐ") {
                 label.innerHTML = '<label class="label">ชื่อหน่วยงาน<span class="has-text-danger ml-1">*</span></label>';
             } else  {
                 label.innerHTML = '<label class="label">ชื่อ-นามสกุล/ชื่อบริษัท/ชื่อหน่วยงาน<span class="has-text-danger ml-1">*</span></label>'
@@ -307,6 +344,27 @@
         }
         document.addEventListener('DOMContentLoaded', function () {
             updateLabel();
+        });
+    </script>
+    <script>
+        function updateRequiredDocuments() {
+            const typeSelect = document.querySelector('[name="type"]');
+            const selectedType = typeSelect?.options[typeSelect.selectedIndex]?.textContent.trim();
+            const isPrivateCompany = selectedType === 'บริษัทเอกชน';
+
+            document.querySelectorAll('.required-document').forEach(function (documentField) {
+                const isPrivateOnly = documentField.dataset.privateOnly === 'true';
+                const visible = !isPrivateOnly || isPrivateCompany;
+                documentField.style.display = visible ? '' : 'none';
+                const input = documentField.querySelector('.required-document-input');
+                if (input) {
+                    input.required = visible && input.dataset.required === 'true';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateRequiredDocuments();
         });
     </script>
     <script>
