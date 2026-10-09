@@ -179,18 +179,27 @@
                 <div class="customer-detail-section-heading">
                     <div>
                         <p class="customer-detail-section-eyebrow">DOCUMENTS</p>
-                        <h2><i class="fas fa-paperclip"></i> เอกสารเพิ่มเติม</h2>
+                        <h2><i class="fas fa-paperclip"></i> เอกสารประกอบ</h2>
                     </div>
                     <span class="customer-detail-section-count">{{ customer.attachments|length }}</span>
                 </div>
                 {% if customer.attachments %}
                     <div class="table-container">
                         <table class="table is-fullwidth customer-detail-attachment-table">
-                            <thead><tr><th>ชื่อเอกสาร</th><th>รายละเอียด</th><th class="has-text-centered">ไฟล์</th></tr></thead>
+                            <thead>
+                                <th>ชื่อเอกสาร</th>
+                                <th>ประเภทเอกสาร</th><th>รายละเอียด</th>
+                                <th class="has-text-centered">ไฟล์</th>
+                            </thead>
                             <tbody>
                             {% for attachment in customer.attachments %}
                                 <tr>
                                     <td>{{ attachment.file_name or '-' }}</td>
+                                    <td>
+                                        {% if attachment.category %}
+                                            <span class="tag {{ attachment.category_tag }}">{{ attachment.category }}</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ attachment.note or '-' }}</td>
                                     <td class="has-text-centered">
                                         {% if attachment.file %}
@@ -207,7 +216,7 @@
                         </table>
                     </div>
                 {% else %}
-                    <div class="customer-detail-empty">ยังไม่มีเอกสารเพิ่มเติม</div>
+                    <div class="customer-detail-empty">ยังไม่มีเอกสารประกอบ</div>
                 {% endif %}
             </div>
             <div class="customer-detail-section-card customer-detail-request-card">
