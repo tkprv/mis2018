@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Create Customer Account{% endblock %}
-{% if current_user.is_authenticated %}
+{% if current_user.is_authenticated and user_type and user_type == 'staff' %}
     {% include "service_admin/admin_nav.html" %}
 {% endif %}
 {% block head %}
@@ -11,7 +11,7 @@
     <section class="section">
         <div class="columns">
             <div class="column is-half is-offset-3">
-                {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated and user_type and user_type == 'staff' %}
                     {% if customer_id %}
                         <h1 class="title has-text-centered">แก้ไขข้อมูล</h1>
                     {% else %}
@@ -25,7 +25,7 @@
                     <div class="column box">
                         <div class="field" style="margin-top: .5em; margin-left: 1em; margin-bottom: .5em">
                             <b class="is-size-5">
-                                {% if current_user.is_authenticated %}
+                                {% if current_user.is_authenticated and user_type and user_type == 'staff' %}
                                     ข้อมูลลูกค้า
                                 {% else %}
                                     ข้อมูลผู้รับบริการ
@@ -245,7 +245,7 @@
                     <div class="field is-grouped is-grouped-centered">
                         <div class="control">
                             <a class="button"
-                               {% if current_user.is_authenticated %}
+                               {% if current_user.is_authenticated and user_type and user_type == 'staff' %}
                                     href="{{ url_for('service_admin.customer_index', tab=tab) }}"
                                {% else %}
                                     href="{{ url_for('service_admin.customer_register_index') }}"

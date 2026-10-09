@@ -2507,6 +2507,7 @@ def view_customer(customer_id):
 @service_admin.route('/customer/edit/<int:customer_id>', methods=['GET', 'POST'])
 def create_customer(customer_id=None):
     tab = request.args.get('tab')
+    user_type = session.get('user_type')
     if customer_id:
         customer = ServiceCustomerInfo.query.get(customer_id)
         account = ServiceCustomerAccount.query.filter_by(customer_info_id=customer_id).first()
@@ -2571,7 +2572,7 @@ def create_customer(customer_id=None):
         for er in form.errors:
             flash("{} {}".format(er, form.errors[er]), 'danger')
     return render_template('service_admin/create_customer.html', customer_id=customer_id,
-                           form=form, account=account, tab=tab)
+                           form=form, account=account, tab=tab, user_type=user_type)
 
 
 @service_admin.route('/api/customer/account/file/add', methods=['POST'])
