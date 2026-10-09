@@ -2523,7 +2523,7 @@ def create_customer(customer_id=None):
                 file = request.files.get(f'file_{item.id}')
                 if file and allowed_file(file.filename):
                     mime_type = file.mimetype
-                    file_name = '{}.{}'.format(f'{item.file_name.data}', file.filename.split('.')[-1])
+                    file_name = file.filename
                     file_data = file.stream.read()
                     response = s3.put_object(
                         Bucket=S3_BUCKET_NAME,
@@ -2531,14 +2531,21 @@ def create_customer(customer_id=None):
                         Body=file_data,
                         ContentType=mime_type
                     )
+                    item.file_name.data = '{}'.format(file_name.rsplit('.', 1)[0])
                     item.file.data = file_name
+                    item.category.data = 'เอกสารเพิ่มเติม'
         form.populate_obj(customer)
         email = request.form.get('email')
         if customer_id is None:
             if current_user.is_authenticated and user_type and user_type == 'staff':
                 customer.creator_id = current_user.id
-            account = ServiceCustomerAccount(email=email, customer_info=customer,
-                                             verify_datetime=arrow.now('Asia/Bangkok').datetime)
+            cus_account = ServiceCustomerAccount.query.filter_by(email=email).first()
+            if cus_account:
+                flash('อีเมลนี้มีบัญชีผู้ใช้งานอยู่แล้ว', 'danger')
+                return redirect(url_for('service_admin.create_customer', custoemr_id=customer_id, tab=tab))
+            else:
+                account = ServiceCustomerAccount(email=email, customer_info=customer,
+                                                 verify_datetime=arrow.now('Asia/Bangkok').datetime)
         else:
             account.email = email
         if customer.is_document_verified is None:
@@ -2553,7 +2560,7 @@ def create_customer(customer_id=None):
         central_admin_accounts = get_central_admin_academic_service()
         if not customer_id and central_admin_accounts:
             scheme = 'http' if current_app.debug else 'https'
-            link = url_for("service_admin.view_customer", tab='pending', customer_id=customer_id, _external=True,
+            link = url_for("service_admin.view_customer", tab='pending', customer_id=customer.id, _external=True,
                            _scheme=scheme)
             title = f'''แจ้งเตือนการลงทะเบียนผู้รับบริการใหม่'''
             message = f'''เรียน แอดมินส่วนกลาง\n\n'''
@@ -2564,7 +2571,7 @@ def create_customer(customer_id=None):
                 send_mail([account.email + '@mahidol.ac.th' for account in central_admin_accounts], title, message)
             else:
                 print('message', message)
-        if current_user.is_authenticated:
+        if current_user.is_authenticated and user_type and user_type == 'staff':
             return redirect(url_for('service_admin.customer_index', tab=tab))
         else:
             return redirect(url_for('service_admin.closing_page'))
@@ -2585,21 +2592,6 @@ def add_attachment():
             <div id="{}" class="attachment-item">
                 <hr style="background-color: #F3F3F3">
                 <p><strong>รายการที่ {}</strong></p>
-                <div class="field" style="margin-top: .8em">
-                    <label class="label">
-                        {}
-                        <span class="has-text-danger">*</span>
-                    </label>
-                    <div class="control">
-                        {}
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">{}</label>
-                    <div class="control">
-                        {}
-                    </div>
-                </div>
                 <div class="field">
                     <label class="label">
                         {}
@@ -2615,6 +2607,12 @@ def add_attachment():
                             </span>
                             <span class="file-name">กรุณาอัปโหลดไฟล์</span>
                         </label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">{}</label>
+                    <div class="control is-flex">
+                        {}
                         <a class="button is-danger is-outlined" style="margin-left: .5em"
                             hx-delete="{}"
                             hx-target="closest .attachment-item"
@@ -2628,13 +2626,11 @@ def add_attachment():
         """
     resp = template.format(item_form.id,
                            index,
-                           item_form.file_name.label,
-                           item_form.file_name(class_='input', required=True),
-                           item_form.note.label,
-                           item_form.note(class_='input'),
                            item_form.file.label,
                            item_form.id,
                            item_form.id,
+                           item_form.note.label,
+                           item_form.note(class_='input'),
                            url_for('service_admin.remove_attachment', name=item_form.id)
                            )
     resp = make_response(resp)
