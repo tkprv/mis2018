@@ -11,6 +11,7 @@
     <section class="section">
         <div class="columns">
             <div class="column is-half is-offset-3">
+                {%  include 'messages.html' %}
                 {% if current_user.is_authenticated and user_type and user_type == 'staff' %}
                     {% if customer_id %}
                         <h1 class="title has-text-centered">แก้ไขข้อมูล</h1>
@@ -178,21 +179,6 @@
                                 {% for item_form in form.attachments %}
                                     <div id="{{ item_form.id }}" class="attachment-item">
                                         <p class="mt-4 mb-2"><strong>รายการที่ {{ loop.index }}</strong></p>
-                                        <div class="field" style="margin-top: .8em">
-                                            <label class="label">
-                                                {{ item_form.file_name.label }}
-                                                <span class="has-text-danger">*</span>
-                                            </label>
-                                            <div class="control">
-                                                {{ item_form.file_name(class="input", required=true) }}
-                                            </div>
-                                        </div>
-                                        <div class="field">
-                                            <label class="label">{{ item_form.note.label }}</label>
-                                            <div class="control">
-                                                {{ item_form.note(class="input") }}
-                                            </div>
-                                        </div>
                                         <div class="field">
                                             <label class="label">
                                                 {{ item_form.file.label }}
@@ -215,6 +201,12 @@
                                                         {% endif %}
                                                     </span>
                                                 </label>
+                                            </div>
+                                        </div>
+                                        <div class="field">
+                                            <label class="label">{{ item_form.note.label }}</label>
+                                            <div class="control is-flex">
+                                                {{ item_form.note(class="input") }}
                                                 <a class="button is-danger is-outlined" style="margin-left: .5em"
                                                    hx-delete="{{ url_for('service_admin.remove_attachment',
                                                       name=item_form.name) }}"
