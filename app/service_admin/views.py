@@ -70,6 +70,48 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+CUSTOMER_DOCUMENT_DEFINITIONS = (
+    {'key': 'id_card', 'label': 'บัตรประชาชน', 'private_only': False},
+    {'key': 'company_certificate', 'label': 'หนังสือรับรองบริษัท', 'private_only': True},
+    {'key': 'pp20', 'label': 'ภ.พ.20', 'private_only': True},
+    {'key': 'power_of_attorney', 'label': 'หนังสือมอบอำนาจ', 'private_only': True},
+    {'key': 'board_members', 'label': 'รายชื่อคณะกรรมการ', 'private_only': True},
+)
+REQUIRED_DOCUMENT_CATEGORY = 'เอกสารจำเป็น'
+LEGACY_REQUIRED_DOCUMENT_CATEGORIES = {item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS}
+CUSTOMER_DOCUMENT_CATEGORIES = {REQUIRED_DOCUMENT_CATEGORY} | LEGACY_REQUIRED_DOCUMENT_CATEGORIES
+
+
+def _customer_type_name(customer_type):
+    return getattr(customer_type, 'type', None) if customer_type else None
+
+
+def _required_customer_documents(customer_type):
+    type_name = _customer_type_name(customer_type)
+    if type_name == 'บริษัทเอกชน':
+        return CUSTOMER_DOCUMENT_DEFINITIONS
+    return CUSTOMER_DOCUMENT_DEFINITIONS[:1]
+
+
+def _required_document_attachments(customer):
+    attachments = {}
+    for attachment in getattr(customer, 'attachments', []):
+        if attachment.category == REQUIRED_DOCUMENT_CATEGORY:
+            document = next(
+                (item for item in CUSTOMER_DOCUMENT_DEFINITIONS if item['label'] == attachment.file_name),
+                None
+            )
+        else:
+            document = next(
+                (item for item in CUSTOMER_DOCUMENT_DEFINITIONS
+                 if item['label'] == attachment.category),
+                None
+            )
+        if document:
+            attachments[document['key']] = attachment
+    return attachments
+
+
 def generate_url(file_url):
     url = s3.generate_presigned_url('get_object',
                                     Params={'Bucket': S3_BUCKET_NAME, 'Key': file_url},
@@ -2508,16 +2550,115 @@ def view_customer(customer_id):
 def create_customer(customer_id=None):
     tab = request.args.get('tab')
     user_type = session.get('user_type')
+    customer = None
     if customer_id:
         customer = ServiceCustomerInfo.query.get(customer_id)
         account = ServiceCustomerAccount.query.filter_by(customer_info_id=customer_id).first()
         form = ServiceCustomerInfoForm(obj=customer)
+        form.attachments.entries = [
+            entry for entry in form.attachments
+            if getattr(getattr(entry, 'category', None), 'data', None)
+            not in CUSTOMER_DOCUMENT_CATEGORIES
+        ]
     else:
         account = None
         form = ServiceCustomerInfoForm()
     if form.validate_on_submit():
+        old_extra_attachments = (
+            [attachment for attachment in customer.attachments
+             if attachment.category == 'เอกสารเพิ่มเติม']
+            if customer_id else []
+        )
         if customer_id is None:
             customer = ServiceCustomerInfo()
+        for field_name in ('type', 'cus_name', 'taxpayer_identification_no', 'fax_no', 'phone_number'):
+            getattr(form, field_name).populate_obj(customer, field_name)
+        form.customer_contacts.populate_obj(customer, 'customer_contacts')
+
+        selected_type_name = _customer_type_name(form.type.data)
+        required_documents = _required_customer_documents(form.type.data)
+        if selected_type_name != 'บริษัทเอกชน':
+            id_card_attachment = _required_document_attachments(customer).get('id_card')
+            for attachment in list(customer.attachments):
+                if attachment.category == 'เอกสารเพิ่มเติม':
+                    continue
+                if attachment is not id_card_attachment:
+                    db.session.delete(attachment)
+
+        if selected_type_name == 'บริษัทเอกชน':
+            for index, item in enumerate(form.attachments):
+                existing_attachment = (
+                    old_extra_attachments[index] if index < len(old_extra_attachments) else None
+                )
+                if existing_attachment is not None:
+                    existing_attachment.note = item.note.data
+                uploaded_extra_file = request.files.get(f'file_{item.id}')
+                if not uploaded_extra_file or not uploaded_extra_file.filename:
+                    continue
+                if not allowed_file(uploaded_extra_file.filename):
+                    continue
+                file_name = uploaded_extra_file.filename
+                s3.put_object(
+                    Bucket=S3_BUCKET_NAME,
+                    Key=file_name,
+                    Body=uploaded_extra_file.stream.read(),
+                    ContentType=uploaded_extra_file.mimetype
+                )
+                if existing_attachment is None:
+                    existing_attachment = ServiceCustomerAttachment(customer=customer)
+                existing_attachment.file_name = file_name.rsplit('.', 1)[0]
+                existing_attachment.file = file_name
+                existing_attachment.category = 'เอกสารเพิ่มเติม'
+
+        document_errors = []
+        required_attachments = _required_document_attachments(customer)
+        document_uploads = []
+        for document in required_documents:
+            field_name = f"required_document_{document['key']}"
+            uploaded_file = request.files.get(field_name)
+            has_upload = uploaded_file and uploaded_file.filename
+            attachment = required_attachments.get(document['key'])
+
+            if has_upload:
+                if not allowed_file(uploaded_file.filename):
+                    document_errors.append(
+                        f"ไฟล์{document['label']}ต้องเป็นไฟล์ประเภท {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+                    )
+                    continue
+                document_uploads.append((document, uploaded_file, attachment))
+
+            if not has_upload and (attachment is None or not attachment.file):
+                document_errors.append(f"กรุณาแนบ{document['label']}")
+
+        if document_errors:
+            for error in document_errors:
+                flash(error, 'danger')
+            return render_template(
+                'service_admin/create_customer.html', customer_id=customer_id,
+                form=form, account=account, tab=tab, user_type=user_type,
+                document_definitions=CUSTOMER_DOCUMENT_DEFINITIONS,
+                required_document_attachments=_required_document_attachments(customer)
+            )
+
+        for document, uploaded_file, attachment in document_uploads:
+            file_name = uploaded_file.filename
+            s3.put_object(
+                Bucket=S3_BUCKET_NAME,
+                Key=file_name,
+                Body=uploaded_file.stream.read(),
+                ContentType=uploaded_file.mimetype
+            )
+            if attachment is None:
+                attachment = ServiceCustomerAttachment(customer=customer)
+            attachment.file_name = document['label']
+            attachment.file = file_name
+            attachment.category = REQUIRED_DOCUMENT_CATEGORY
+
+        for document, attachment in required_attachments.items():
+            attachment.file_name = next(
+                item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS if item['key'] == document
+            )
+            attachment.category = REQUIRED_DOCUMENT_CATEGORY
         if form.attachments:
             for item in form.attachments:
                 file = request.files.get(f'file_{item.id}')
@@ -2578,8 +2719,12 @@ def create_customer(customer_id=None):
     else:
         for er in form.errors:
             flash("{} {}".format(er, form.errors[er]), 'danger')
-    return render_template('service_admin/create_customer.html', customer_id=customer_id,
-                           form=form, account=account, tab=tab, user_type=user_type)
+    return render_template(
+        'service_admin/create_customer.html', customer_id=customer_id,
+        form=form, account=account, tab=tab, user_type=user_type,
+        document_definitions=CUSTOMER_DOCUMENT_DEFINITIONS,
+        required_document_attachments=_required_document_attachments(customer) if customer else {}
+    )
 
 
 @service_admin.route('/api/customer/account/file/add', methods=['POST'])
