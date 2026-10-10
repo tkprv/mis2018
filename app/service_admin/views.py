@@ -2591,16 +2591,8 @@ def create_customer(customer_id=None):
         account = None
         form = ServiceCustomerInfoForm()
     if form.validate_on_submit():
-        old_extra_attachments = (
-            [attachment for attachment in customer.attachments
-             if attachment.category == 'เอกสารเพิ่มเติม']
-            if customer_id else []
-        )
         if customer_id is None:
             customer = ServiceCustomerInfo()
-        for field_name in ('type', 'cus_name', 'taxpayer_identification_no', 'fax_no', 'phone_number'):
-            getattr(form, field_name).populate_obj(customer, field_name)
-        form.customer_contacts.populate_obj(customer, 'customer_contacts')
 
         selected_type_name = _customer_type_name(form.type.data)
         required_documents = _required_customer_documents(form.type.data)
@@ -2611,31 +2603,6 @@ def create_customer(customer_id=None):
                     continue
                 if attachment is not id_card_attachment:
                     db.session.delete(attachment)
-
-        if selected_type_name == 'บริษัทเอกชน':
-            for index, item in enumerate(form.attachments):
-                existing_attachment = (
-                    old_extra_attachments[index] if index < len(old_extra_attachments) else None
-                )
-                if existing_attachment is not None:
-                    existing_attachment.note = item.note.data
-                uploaded_extra_file = request.files.get(f'file_{item.id}')
-                if not uploaded_extra_file or not uploaded_extra_file.filename:
-                    continue
-                if not allowed_file(uploaded_extra_file.filename):
-                    continue
-                file_name = uploaded_extra_file.filename
-                s3.put_object(
-                    Bucket=S3_BUCKET_NAME,
-                    Key=file_name,
-                    Body=uploaded_extra_file.stream.read(),
-                    ContentType=uploaded_extra_file.mimetype
-                )
-                if existing_attachment is None:
-                    existing_attachment = ServiceCustomerAttachment(customer=customer)
-                existing_attachment.file_name = file_name.rsplit('.', 1)[0]
-                existing_attachment.file = file_name
-                existing_attachment.category = 'เอกสารเพิ่มเติม'
 
         document_errors = []
         required_attachments = _required_document_attachments(customer)
