@@ -48,6 +48,7 @@ class ServiceCustomerAttachmentForm(ModelForm):
 class ServiceCustomerInfoForm(ModelForm):
     class Meta:
         model = ServiceCustomerInfo
+        exclude = ['is_document_verified']
 
     type = QuerySelectField('ประเภท', query_factory=lambda: ServiceCustomerType.query.all(), allow_blank=True,
                             blank_text='กรุณาเลือกประเภท', get_label='type',
