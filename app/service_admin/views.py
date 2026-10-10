@@ -71,11 +71,12 @@ def allowed_file(filename):
 
 
 CUSTOMER_DOCUMENT_DEFINITIONS = (
-    {'key': 'id_card', 'label': 'บัตรประชาชน', 'private_only': False},
-    {'key': 'company_certificate', 'label': 'หนังสือรับรองบริษัท', 'private_only': True},
-    {'key': 'pp20', 'label': 'ภ.พ.20', 'private_only': True},
-    {'key': 'power_of_attorney', 'label': 'หนังสือมอบอำนาจ', 'private_only': True},
-    {'key': 'board_members', 'label': 'รายชื่อคณะกรรมการ', 'private_only': True},
+    {'key': 'id_card', 'label': 'บัตรประชาชน', 'private_only': False, 'person_only': True},
+    {'key': 'company_certificate', 'label': 'หนังสือรับรองบริษัท', 'private_only': True, 'person_only': False},
+    {'key': 'pp20', 'label': 'ภ.พ.20', 'private_only': True, 'person_only': False},
+    {'key': 'power_of_attorney', 'label': 'หนังสือมอบอำนาจ', 'private_only': True, 'person_only': False},
+    {'key': 'grantor_id_card', 'label': 'บัตรประชาชนผู้มอบอำนาจ', 'private_only': True, 'person_only': False},
+    {'key': 'attorney_id_card', 'label': 'บัตรประชาชนผู้รับมอบอำนาจ', 'private_only': True, 'person_only': False},
 )
 REQUIRED_DOCUMENT_CATEGORY = 'เอกสารจำเป็น'
 LEGACY_REQUIRED_DOCUMENT_CATEGORIES = {item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS}
@@ -89,7 +90,7 @@ def _customer_type_name(customer_type):
 def _required_customer_documents(customer_type):
     type_name = _customer_type_name(customer_type)
     if type_name == 'บริษัทเอกชน':
-        return CUSTOMER_DOCUMENT_DEFINITIONS
+        return tuple(item for item in CUSTOMER_DOCUMENT_DEFINITIONS if item['private_only'])
     return CUSTOMER_DOCUMENT_DEFINITIONS[:1]
 
 
