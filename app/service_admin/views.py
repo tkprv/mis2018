@@ -2710,6 +2710,7 @@ def create_customer(customer_id=None):
                 customer.attachments.append(attachment)
         email = request.form.get('email')
         if customer_id is None:
+            customer.is_document_verified = None
             if current_user.is_authenticated and user_type and user_type == 'staff':
                 customer.creator_id = current_user.id
             cus_account = ServiceCustomerAccount.query.filter_by(email=email).first()
@@ -2721,8 +2722,8 @@ def create_customer(customer_id=None):
                                                  verify_datetime=arrow.now('Asia/Bangkok').datetime)
         else:
             account.email = email
-        if customer.is_document_verified is None:
-            customer.is_document_verified = None
+            if customer.is_document_verified is None:
+                customer.is_document_verified = None
         db.session.add(account)
         db.session.add(customer)
         db.session.commit()
