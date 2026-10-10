@@ -2667,6 +2667,7 @@ def create_customer(customer_id=None):
                 required_document_attachments=_required_document_attachments(customer)
             )
 
+        uploaded_required_documents = []
         for document, uploaded_file, attachment in document_uploads:
             file_name = uploaded_file.filename
             s3.put_object(
@@ -2675,18 +2676,7 @@ def create_customer(customer_id=None):
                 Body=uploaded_file.stream.read(),
                 ContentType=uploaded_file.mimetype
             )
-            if attachment is None:
-                attachment = ServiceCustomerAttachment(customer=customer)
-                required_attachments[document['key']] = attachment
-            attachment.file_name = document['label']
-            attachment.file = file_name
-            attachment.category = REQUIRED_DOCUMENT_CATEGORY
-
-        for document, attachment in required_attachments.items():
-            attachment.file_name = next(
-                item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS if item['key'] == document
-            )
-            attachment.category = REQUIRED_DOCUMENT_CATEGORY
+            uploaded_required_documents.append((document, attachment, file_name))
         if form.attachments:
             for item in form.attachments:
                 file = request.files.get(f'file_{item.id}')
@@ -2703,11 +2693,26 @@ def create_customer(customer_id=None):
                     item.file_name.data = '{}'.format(file_name.rsplit('.', 1)[0])
                     item.file.data = file_name
                     item.category.data = 'เอกสารเพิ่มเติม'
-        required_attachments_to_preserve = list(required_attachments.values())
         form.populate_obj(customer)
-        for attachment in required_attachments_to_preserve:
+
+        for document, attachment, file_name in uploaded_required_documents:
+            if attachment is None:
+                attachment = ServiceCustomerAttachment(customer=customer)
+                required_attachments[document['key']] = attachment
+            attachment.file_name = document['label']
+            attachment.file = file_name
+            attachment.category = REQUIRED_DOCUMENT_CATEGORY
+
+        for document, attachment in required_attachments.items():
+            attachment.file_name = next(
+                item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS if item['key'] == document
+            )
+            attachment.category = REQUIRED_DOCUMENT_CATEGORY
+            attachment.customer = customer
             if attachment not in customer.attachments:
                 customer.attachments.append(attachment)
+            db.session.add(attachment)
+
         email = request.form.get('email')
         if customer_id is None:
             customer.is_document_verified = None
