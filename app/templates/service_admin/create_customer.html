@@ -176,7 +176,8 @@
                             {% for document in document_definitions %}
                                 {% set attachment = required_document_attachments.get(document.key) %}
                                 <div class="field required-document"
-                                     data-private-only="{{ 'true' if document.private_only else 'false' }}">
+                                     data-private-only="{{ 'true' if document.private_only else 'false' }}"
+                                     data-person-only="{{ 'true' if document.person_only else 'false' }}">
                                     <label class="label">
                                         {{ document.label }}
                                         <span class="has-text-danger">*</span>
@@ -354,7 +355,8 @@
 
             document.querySelectorAll('.required-document').forEach(function (documentField) {
                 const isPrivateOnly = documentField.dataset.privateOnly === 'true';
-                const visible = !isPrivateOnly || isPrivateCompany;
+                const isPersonOnly = documentField.dataset.personOnly === 'true';
+                const visible = isPrivateCompany ? !isPersonOnly : !isPrivateOnly;
                 documentField.style.display = visible ? '' : 'none';
                 const input = documentField.querySelector('.required-document-input');
                 if (input) {
