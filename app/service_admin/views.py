@@ -2646,6 +2646,7 @@ def create_customer(customer_id=None):
         if form.attachments:
             for item in form.attachments:
                 file = request.files.get(f'file_{item.id}')
+                print('f', file)
                 if file and allowed_file(file.filename):
                     mime_type = file.mimetype
                     file_name = file.filename
@@ -2733,7 +2734,7 @@ def create_customer(customer_id=None):
 
 @service_admin.route('/api/customer/account/file/add', methods=['POST'])
 def add_attachment():
-    form = ServiceCustomerInfoForm()
+    form = ServiceCustomerInfoForm(request.form)
     form.attachments.append_entry()
     item_form = form.attachments[-1]
     index = len(form.attachments)
