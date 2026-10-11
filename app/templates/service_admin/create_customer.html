@@ -260,6 +260,7 @@
                                 <div class="control">
                                     <button type="button" class="button is-info is-small is-light is-rounded"
                                             hx-post="{{ url_for('service_admin.add_attachment') }}"
+                                            hx-include="closest form"
                                             hx-target="#attachment-field" hx-swap="beforeend">
                                         <span class="icon">
                                             <i class="fas fa-plus"></i>
