@@ -2595,15 +2595,13 @@ def create_customer(customer_id=None):
         if customer_id is None:
             customer = ServiceCustomerInfo()
 
-        selected_type_name = _customer_type_name(form.type.data)
         required_documents = _required_customer_documents(form.type.data)
-        if selected_type_name != 'บริษัทเอกชน':
-            id_card_attachment = _required_document_attachments(customer).get('id_card')
+        type_changed = customer_id is not None and customer.type_id != form.type.data.id
+        if type_changed:
             for attachment in list(customer.attachments):
                 if attachment.category == 'เอกสารเพิ่มเติม':
                     continue
-                if attachment is not id_card_attachment:
-                    db.session.delete(attachment)
+                customer.attachments.remove(attachment)
 
         document_errors = []
         required_attachments = _required_document_attachments(customer)
