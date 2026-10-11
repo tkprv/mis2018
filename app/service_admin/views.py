@@ -71,12 +71,12 @@ def allowed_file(filename):
 
 
 CUSTOMER_DOCUMENT_DEFINITIONS = (
-    {'key': 'id_card', 'label': 'บัตรประชาชน', 'private_only': False, 'person_only': True},
-    {'key': 'company_certificate', 'label': 'หนังสือรับรองบริษัท', 'private_only': True, 'person_only': False},
-    {'key': 'pp20', 'label': 'ภ.พ.20', 'private_only': True, 'person_only': False},
-    {'key': 'power_of_attorney', 'label': 'หนังสือมอบอำนาจ', 'private_only': True, 'person_only': False},
-    {'key': 'grantor_id_card', 'label': 'บัตรประชาชนผู้มอบอำนาจ', 'private_only': True, 'person_only': False},
-    {'key': 'attorney_id_card', 'label': 'บัตรประชาชนผู้รับมอบอำนาจ', 'private_only': True, 'person_only': False},
+    {'key': 'id_card', 'label': 'บัตรประชาชน', 'private_only': False},
+    {'key': 'company_certificate', 'label': 'หนังสือรับรองบริษัท', 'private_only': True},
+    {'key': 'pp20', 'label': 'ภ.พ.20', 'private_only': True},
+    {'key': 'power_of_attorney', 'label': 'หนังสือมอบอำนาจ', 'private_only': True},
+    {'key': 'grantor_id_card', 'label': 'บัตรประชาชนผู้มอบอำนาจ', 'private_only': True},
+    {'key': 'attorney_id_card', 'label': 'บัตรประชาชนผู้รับมอบอำนาจ', 'private_only': True},
 )
 REQUIRED_DOCUMENT_CATEGORY = 'เอกสารจำเป็น'
 LEGACY_REQUIRED_DOCUMENT_CATEGORIES = {item['label'] for item in CUSTOMER_DOCUMENT_DEFINITIONS}
