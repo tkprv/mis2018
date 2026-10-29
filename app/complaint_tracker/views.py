@@ -37,7 +37,7 @@ from flask_mail import Message
 from ..models import Org
 from ..procurement.models import ProcurementDetail
 from ..roles import admin_permission
-from ..staff.models import StaffAccount, StaffEmployment, StaffPersonalInfo, StaffCostCenterAuthority
+from ..staff.models import StaffAccount, StaffEmployment, StaffPersonalInfo, StaffCostCenterAuthority, StaffHeadPosition
 
 sarabun_font = TTFont('Sarabun', 'app/static/fonts/THSarabunNew.ttf')
 pdfmetrics.registerFont(sarabun_font)
@@ -3309,10 +3309,26 @@ def generate_repair_approval_pdf(repair_approval):
         ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
     ]))
 
+    dean = StaffHeadPosition.query.filter_by(position='คณบดีคณะเทคนิคการแพทย์').first()
+    associate_dean = StaffHeadPosition.query.filter_by(position='รองคณบดีคณะเทคนิคการแพทย์').first()
+
     if repair_approval.price and repair_approval.price > 100000:
-        approver_name = '(ผู้ช่วยศาสตราจารย์ ดร.โชติรส พลับพลึง)<br/>คณบดีคณะเทคนิคการแพทย์'
+        if dean:
+            approver_name = (f'{dean.staff.fullname_with_full_position}<br/>{dean.position}'
+                             f'<br/>ปฏิบัติหน้าที่แทนอธิการบดีมหาวิทยาลัยมหิดล')
+        else:
+            approver_name = (f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                            f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                            f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
     else:
-        approver_name = '(รองศาสตราจารย์ ดร.ธนาวุฒิ ตันติมงคลวัฒน์)<br/>รองคณบดีคณะเทคนิคการแพทย์'
+        if associate_dean:
+            approver_name = (f'{associate_dean.staff.fullname_with_full_position}<br/>{associate_dean.position}'
+                             f'<br/>ปฏิบัติหน้าที่แทนอธิการบดีมหาวิทยาลัยมหิดล')
+        else:
+            approver_name = (
+                f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
 
     approval = Table([
         [Paragraph('อนุมัติ', style=approver_style)],
