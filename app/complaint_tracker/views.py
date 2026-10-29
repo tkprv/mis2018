@@ -2908,6 +2908,34 @@ def edit_committee(repair_approval_id):
             if selected_staff:
                 c_form.form.staff.choices.append((str(selected_staff.id), selected_staff.fullname))
     if form.validate_on_submit():
+        if rep_approval.price > 500000:
+            result_committee_staff_ids = {
+                str(c_form.form.staff.data)
+                for c_form in form.committees.entries[3:6]
+                if c_form.form.staff.data
+            }
+            receiving_committee_staff_ids = {
+                str(c_form.form.staff.data)
+                for c_form in form.committees.entries[6:9]
+                if c_form.form.staff.data
+            }
+
+            if result_committee_staff_ids & receiving_committee_staff_ids:
+                flash(
+                    'คณะกรรมการพิจารณาผลการประกวดราคาอิเล็กทรอนิกส์ '
+                    'และคณะกรรมการตรวจรับพัสดุห้ามมีรายชื่อซ้ำกัน',
+                    'danger'
+                )
+                return render_template(
+                    'complaint_tracker/committee_form.html',
+                    form=form,
+                    temp=temp,
+                    tab=tab,
+                    menu=menu,
+                    repair_approval_id=repair_approval_id,
+                    rep_approval=rep_approval,
+                )
+
         ComplaintCommittee.query.filter_by(repair_approval_id=rep_approval.id).delete()
         for i, c_form in enumerate(form.committees.entries):
             if not c_form.form.staff.data:
