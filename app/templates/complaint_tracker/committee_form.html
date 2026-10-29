@@ -82,7 +82,16 @@
     <script>
         $(document).ready(function() {
             $('select.js-example-basic-single').each(function() {
-                $(this).select2();
+                const select = $(this);
+                select.select2({
+                    width: '100%',
+                    placeholder: 'กรุณาเลือกรายชื่อคณะกรรมการ',
+                    ajax: {
+                        url: "{{ url_for('comp_tracker.get_committee_staff') }}",
+                        dataType: 'json',
+                        delay: 250
+                    }
+                });
             });
         });
     </script>
