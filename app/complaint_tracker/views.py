@@ -37,7 +37,7 @@ from flask_mail import Message
 from ..models import Org
 from ..procurement.models import ProcurementDetail
 from ..roles import admin_permission
-from ..staff.models import StaffPersonalInfo, StaffCostCenterAuthority
+from ..staff.models import StaffAccount, StaffEmployment, StaffPersonalInfo, StaffCostCenterAuthority
 
 sarabun_font = TTFont('Sarabun', 'app/static/fonts/THSarabunNew.ttf')
 pdfmetrics.registerFont(sarabun_font)
@@ -1039,6 +1039,38 @@ def get_position():
     staff = StaffAccount.query.filter_by(id=staff_id).first()
     position = staff.personal_info.position if staff else ''
     return jsonify({"position": position})
+
+
+@complaint_tracker.route('/api/committee/staff')
+@login_required
+def get_committee_staff():
+    search_term = (request.args.get('q') or request.args.get('term') or '').strip()
+    limit = 50
+    query = (
+        StaffAccount.query
+        .join(StaffPersonalInfo, StaffAccount.personal_id == StaffPersonalInfo.id)
+        .filter(
+            StaffPersonalInfo.retirement_date.is_(None),
+            StaffPersonalInfo.resignation_date.is_(None),
+            or_(StaffPersonalInfo.retired == False, StaffPersonalInfo.retired.is_(None)),
+            ~StaffPersonalInfo.employment.has(StaffEmployment.title.ilike('%ลูกจ้างชั่วคราว%')),
+        )
+        .order_by(StaffPersonalInfo.th_firstname.asc(), StaffPersonalInfo.en_firstname.asc())
+    )
+    if search_term:
+        pattern = f'%{search_term}%'
+        query = query.filter(or_(
+            StaffPersonalInfo.th_firstname.ilike(pattern),
+            StaffPersonalInfo.th_lastname.ilike(pattern),
+            StaffPersonalInfo.en_firstname.ilike(pattern),
+            StaffPersonalInfo.en_lastname.ilike(pattern),
+            StaffAccount.email.ilike(pattern),
+        ))
+
+    accounts = query.limit(limit).all()
+    return jsonify({
+        'results': [{'id': account.id, 'text': account.fullname} for account in accounts],
+    })
 
 
 @complaint_tracker.route('/')
@@ -2820,7 +2852,12 @@ def edit_committee(repair_approval_id):
             for committee in committees:
                 c_form = form.committees.append_entry()
                 c_form.form.id.data = committee.id
-                c_form.form.staff.data = committee.staff
+                if committee.staff:
+                    c_form.form.staff.choices = [
+                        ('', 'กรุณาเลือกรายชื่อคณะกรรมการ'),
+                        (str(committee.staff.id), committee.staff.fullname),
+                    ]
+                    c_form.form.staff.data = str(committee.staff.id)
                 c_form.form.position.data = committee.position
                 c_form.form.committee_position.data = committee.committee_position
             for i in range(min_entries - current_count):
@@ -2832,13 +2869,51 @@ def edit_committee(repair_approval_id):
                 c_form = form.committees.append_entry()
                 if i < len(default_positions):
                     c_form.form.committee_position.data = default_positions[i]
+        staff_accounts = {
+            committee.staff.id: committee.staff
+            for committee in committees if committee.staff
+        }
+        for c_form in form.committees.entries:
+            selected_staff_id = int(c_form.form.staff.data) if str(c_form.form.staff.data).isdigit() else None
+            selected_staff = staff_accounts.get(selected_staff_id)
+            c_form.form.staff.choices = [('', 'กรุณาเลือกรายชื่อคณะกรรมการ')]
+            if selected_staff:
+                c_form.form.staff.choices.append((str(selected_staff.id), selected_staff.fullname))
+                c_form.form.staff.data = str(selected_staff.id)
+            else:
+                c_form.form.staff.data = ''
+    else:
+        submitted_staff_ids = {
+            int(c_form.form.staff.data)
+            for c_form in form.committees.entries
+            if c_form.form.staff.data and str(c_form.form.staff.data).isdigit()
+        }
+        staff_accounts = {
+            account.id: account
+            for account in StaffAccount.query
+            .join(StaffPersonalInfo, StaffAccount.personal_id == StaffPersonalInfo.id)
+            .filter(
+                StaffAccount.id.in_(submitted_staff_ids),
+                StaffPersonalInfo.retirement_date.is_(None),
+                StaffPersonalInfo.resignation_date.is_(None),
+                or_(StaffPersonalInfo.retired == False, StaffPersonalInfo.retired.is_(None)),
+                ~StaffPersonalInfo.employment.has(StaffEmployment.title.ilike('%ลูกจ้างชั่วคราว%')),
+            )
+            .all()
+        } if submitted_staff_ids else {}
+        for c_form in form.committees.entries:
+            selected_staff_id = int(c_form.form.staff.data) if str(c_form.form.staff.data).isdigit() else None
+            selected_staff = staff_accounts.get(selected_staff_id)
+            c_form.form.staff.choices = [('', 'กรุณาเลือกรายชื่อคณะกรรมการ')]
+            if selected_staff:
+                c_form.form.staff.choices.append((str(selected_staff.id), selected_staff.fullname))
     if form.validate_on_submit():
         ComplaintCommittee.query.filter_by(repair_approval_id=rep_approval.id).delete()
         for i, c_form in enumerate(form.committees.entries):
             if not c_form.form.staff.data:
                 continue
             committee = ComplaintCommittee(
-                staff=c_form.form.staff.data,
+                staff_id=int(c_form.form.staff.data),
                 position=c_form.form.position.data,
                 committee_position=c_form.form.committee_position.data,
                 repair_approval_id=rep_approval.id,
@@ -3234,7 +3309,7 @@ def generate_repair_approval_pdf(repair_approval):
         ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
     ]))
 
-    if repair_approval.price and repair_approval.price >= 100000:
+    if repair_approval.price and repair_approval.price > 100000:
         approver_name = '(ผู้ช่วยศาสตราจารย์ ดร.โชติรส พลับพลึง)<br/>คณบดีคณะเทคนิคการแพทย์'
     else:
         approver_name = '(รองศาสตราจารย์ ดร.ธนาวุฒิ ตันติมงคลวัฒน์)<br/>รองคณบดีคณะเทคนิคการแพทย์'
